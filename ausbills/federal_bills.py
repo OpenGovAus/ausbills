@@ -30,6 +30,24 @@ def get_table_data(tds, col):
         return("")
 
 
+def get_bill_summary(bill_url_string):
+    try:
+        bill_url = requests.get(bill_url_string).text
+        bill_soup = BeautifulSoup(bill_url, 'lxml')
+        div = bill_soup.find("div", id='main_0_summaryPanel')
+    except Exception as e:
+        div = None
+    if div:
+        for span_tag in div.find_all('span'):
+            span_tag.unwrap()
+        summary = div.p.text.replace('\n', '').replace('    ', '')
+    else:
+        summary = ""
+    return(summary)
+
+
+
+
 def get_house_bills():
     LOWER_HOUSE_BILLS = []
     try:
@@ -48,15 +66,6 @@ def get_house_bills():
             passed_senate = get_table_data(tr.findAll('td'), 4)
             assent_date = get_table_data(tr.findAll('td'), 5)
             act_no = get_table_data(tr.findAll('td'), 6)
-            bill_url = requests.get(bill_url_string).text
-            bill_soup = BeautifulSoup(bill_url, 'lxml')
-            div = bill_soup.find("div", id='main_0_summaryPanel')
-            if div:
-                for span_tag in div.find_all('span'):
-                    span_tag.unwrap()
-                summary = div.p.text.replace('\n', '').replace('    ', '')
-            else:
-                summary = ""
             LOWER_HOUSE_BILLS.append(
                 {
                     CHAMBER: "House",
@@ -66,7 +75,6 @@ def get_house_bills():
                     INTRO_SENATE: intro_senate,
                     PASSED_SENATE: passed_senate,
                     ASSENT_DATE: assent_date,
-                    SUMMARY: summary,
                     URL: bill_url_string,
                     ACT_NO: act_no})
 
@@ -95,18 +103,6 @@ def get_senate_bills():
             passed_senate = get_table_data(tr.findAll('td'), 2)
             assent_date = get_table_data(tr.findAll('td'), 5)
             act_no = get_table_data(tr.findAll('td'), 6)
-            try:
-                bill_url = requests.get(bill_url_string).text
-                bill_soup = BeautifulSoup(bill_url, 'lxml')
-                div = bill_soup.find("div", id='main_0_summaryPanel')
-            except Exception as e:
-                div = None
-            if div:
-                for span_tag in div.find_all('span'):
-                    span_tag.unwrap()
-                summary = div.p.text.replace('\n', '').replace('    ', '')
-            else:
-                summary = ""
             UPPER_HOUSE_BILLS.append(
                 {
                     CHAMBER: "Senate",
@@ -116,7 +112,6 @@ def get_senate_bills():
                     INTRO_SENATE: intro_senate,
                     PASSED_SENATE: passed_senate,
                     ASSENT_DATE: assent_date,
-                    SUMMARY: summary,
                     URL: bill_url_string,
                     ACT_NO: act_no})
 
