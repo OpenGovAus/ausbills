@@ -12,6 +12,10 @@ Current governments that are supported:
 
 - Australian Federal Government
 
+## Contribute
+
+Each 
+
 ## Australian Federal Government
 
 This module had methods for scraping the [Australian Federal Parliament](https://www.aph.gov.au/Parliamentary_Business/Bills_Legislation/Bills_Lists/Details_page?blsId=legislation%2fbillslst%2fbillslst_c203aa1c-1876-41a8-bc76-1de328bdb726) website, using _beautiful soup_, and send to separate Senate and House of Representatives Discord channels as embeds that can be called throughout Discord server.
