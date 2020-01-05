@@ -12,9 +12,15 @@ Current governments that are supported:
 
 - Australian Federal Government
 
-## Contribute
+## Contributing
 
-Each 
+Fork the repo and install requirements
+
+```
+pip3 install -r requirements.txt
+```
+
+Each state should their own bills and corresponding website. Add a python file for a new state in the /ausbills dir. the python file should have the naming convention: `wa_bills.py` for *Western Australia* for example. Once you are happy, update the README on method usage and make a Pull Request.
 
 ## Australian Federal Government
 
