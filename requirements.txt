@@ -1,3 +1,2 @@
-pandas
 beautifulsoup4
 lxml
