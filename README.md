@@ -13,14 +13,14 @@ This module had methods for scraping the [Australian Federal Parliament](https:/
 The bills are scraped to get data from upper(senate) and lower house bills are:
 
 ```python
-import ausbills
-ausbills.get_house_bills()
-ausbills.get_senate_bills()
+from ausbills import federal_bills
+federal_bills.get_house_bills()
+federal_bills.get_senate_bills()
 ```
 
 And can easily be turned into pandas dataframes:
 
 ```python
-df_lower = pd.DataFrame(ausbills.get_house_bills())
-df_upper = pd.DataFrame(ausbills.get_senate_bills())
+df_lower = pd.DataFrame(federal_bills.get_house_bills())
+df_upper = pd.DataFrame(federal_bills.get_senate_bills())
 ```
