@@ -43,9 +43,8 @@ df_lower = pd.DataFrame(federal_bills.get_house_bills())
 df_upper = pd.DataFrame(federal_bills.get_senate_bills())
 ```
 
-You and get bill details buy providing the url. For example:
+You and get bill details buy providing the url string. For example:
 
 ```python
-url = df_lower[4]['URL']
 print(federal_bills.get_bill_summary(url))
 ```
