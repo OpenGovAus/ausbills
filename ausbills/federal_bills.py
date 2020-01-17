@@ -136,4 +136,4 @@ def get_senate_bills():
 # d = get_house_bills()
 # df = pd.DataFrame(d)
 # df.to_csv("lowerbills.csv")
-print(get_bill_text_links('https://www.aph.gov.au/Parliamentary_Business/Bills_Legislation/Bills_Search_Results/Result?bId=r6356'))
+# print(get_bill_text_links('https://www.aph.gov.au/Parliamentary_Business/Bills_Legislation/Bills_Search_Results/Result?bId=r6356'))
