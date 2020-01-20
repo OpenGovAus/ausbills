@@ -70,6 +70,16 @@ def get_bill_em_links(bill_url_string):
     except Exception as e:
         return([])
 
+
+def get_sponsor(bill_url_string):
+    try:
+        bill_url = requests.get(bill_url_string).text
+        bill_soup = BeautifulSoup(bill_url, 'lxml')
+        tr = bill_soup.find("div", id='main_0_billSummary_sponsorPanel')
+        return(tr.find_all('dd')[0].text.replace(' ','').replace('\n',''))
+    except Exception as e:
+        return('')
+
 def get_house_bills():
     LOWER_HOUSE_BILLS = []
     try:
@@ -147,4 +157,4 @@ def get_senate_bills():
 # d = get_house_bills()
 # df = pd.DataFrame(d)
 # df.to_csv("lowerbills.csv")
-print(get_bill_em_links('https://www.aph.gov.au/Parliamentary_Business/Bills_Legislation/Bills_Search_Results/Result?bId=r6356'))
+print(get_sponsor('https://www.aph.gov.au/Parliamentary_Business/Bills_Legislation/Bills_Search_Results/Result?bId=r6356'))
