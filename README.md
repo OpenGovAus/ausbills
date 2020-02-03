@@ -48,3 +48,9 @@ You and get bill details buy providing the url string. For example:
 ```python
 print(federal_bills.get_bill_summary(url))
 ```
+
+## TheVoteForYou API
+
+*Under dev*
+
+I decided (for now) to add functions to obtain relevant data via the [TheyVoteForYou API](https://theyvoteforyou.org.au/help/data). This is in [ausbills/federal_theyvote.py](ausbills/federal_theyvote.py).
