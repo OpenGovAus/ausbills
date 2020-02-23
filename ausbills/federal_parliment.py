@@ -19,7 +19,7 @@ SUMMARY = "Summary"
 bills_legislation_url = "https://www.aph.gov.au/Parliamentary_Business/Bills_Legislation/Bills_Lists/Details_page?blsId=legislation%2fbillslst%2fbillslst_c203aa1c-1876-41a8-bc76-1de328bdb726"
 
 
-class Federal_Bills(object):
+class Bills(object):
     _bills_data = []
     chambers = ["House", "Senate"]
     this_year = datetime.datetime.now().year
@@ -131,12 +131,28 @@ class Bill(object):
         self.assent_date = initial_data[ASSENT_DATE]
         self.url = initial_data[URL]
         self.act_no = initial_data[ACT_NO]
+        self.bill_url = requests.get(self.url).text
+        self.bill_soup = BeautifulSoup(self.bill_url, 'lxml')
 
-    def get_bill_summary(self, bill_url_string):
+    @property
+    def summary(self):
+        return(self.get_bill_summary())
+
+    @property
+    def sponsor(self):
+        return(self.get_sponsor())
+
+    @property
+    def bill_text_links(self):
+        return(self.get_bill_text_links())
+
+    @property
+    def explanatory_memoranda_links(self):
+        return(self.get_bill_em_links())
+
+    def get_bill_summary(self):
         try:
-            bill_url = requests.get(bill_url_string).text
-            bill_soup = BeautifulSoup(bill_url, 'lxml')
-            div = bill_soup.find("div", id='main_0_summaryPanel')
+            div = self.bill_soup.find("div", id='main_0_summaryPanel')
         except Exception as e:
             div = None
         if div:
@@ -147,11 +163,9 @@ class Bill(object):
             summary = ""
         return(summary)
 
-    def get_bill_text_links(self, bill_url_string):
+    def get_bill_text_links(self):
         try:
-            bill_url = requests.get(bill_url_string).text
-            bill_soup = BeautifulSoup(bill_url, 'lxml')
-            tr = bill_soup.find(
+            tr = self.bill_soup.find(
                 "tr", id='main_0_textOfBillReadingControl_readingItemRepeater_trFirstReading1_0')
             links = []
             for a in tr.find_all('td')[1].find_all('a'):
@@ -160,11 +174,9 @@ class Bill(object):
         except Exception as e:
             return([])
 
-    def get_bill_em_links(self, bill_url_string):
+    def get_bill_em_links(self):
         try:
-            bill_url = requests.get(bill_url_string).text
-            bill_soup = BeautifulSoup(bill_url, 'lxml')
-            tr = bill_soup.find(
+            tr = self.bill_soup.find(
                 "tr", id='main_0_explanatoryMemorandaControl_readingItemRepeater_trFirstReading1_0')
             links = []
             for a in tr.find_all('td')[1].find_all('a'):
@@ -173,11 +185,9 @@ class Bill(object):
         except Exception as e:
             return([])
 
-    def get_sponsor(self, bill_url_string):
+    def get_sponsor(self):
         try:
-            bill_url = requests.get(bill_url_string).text
-            bill_soup = BeautifulSoup(bill_url, 'lxml')
-            tr = bill_soup.find("div", id='main_0_billSummary_sponsorPanel')
+            tr = self.bill_soup.find("div", id='main_0_billSummary_sponsorPanel')
             return(tr.find_all('dd')[0].text.replace(' ', '').replace('\n', ''))
         except Exception as e:
             return('')
@@ -185,13 +195,23 @@ class Bill(object):
 # for testing
 
 
-fb = Federal_Bills()
+# fb = Federal_Bills()
 
 
-print(fb.data[3])
-print()
-url = fb.data[3]
-b = Bill(fb.data[3])
-
-print(b.url)
-print(b.intro_house)
+# print(fb.data[3])
+# print()
+# url = fb.data[3]
+# b = Bill(fb.data[3])
+#
+# print(b.url)
+# print(b.intro_house)
+# print(b.summary)
+# print(b.sponsor)
+# print(b.bill_text_links)
+# print(b.explanatory_memoranda_links)
+#
+# for bd in fb.data:
+#     b = Bill(bd)
+#     print(b.summary)
+#     print(b.sponsor)
+#     print('---------')
