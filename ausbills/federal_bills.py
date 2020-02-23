@@ -85,8 +85,10 @@ class Federal_Bills(object):
             year = self.this_year - i
             if str(year) in bill_dict[SHORT_TITLE]:
                 bill_year = year
-        house_stages = [INTRO_HOUSE, PASSED_HOUSE, INTRO_SENATE, PASSED_SENATE]
-        senate_stages = [INTRO_SENATE, PASSED_SENATE, INTRO_HOUSE, PASSED_HOUSE]
+        house_stages = [INTRO_HOUSE, PASSED_HOUSE,
+                        INTRO_SENATE, PASSED_SENATE, ASSENT_DATE]
+        senate_stages = [INTRO_SENATE, PASSED_SENATE,
+                         INTRO_HOUSE, PASSED_HOUSE, ASSENT_DATE]
 
         for stage in house_stages:
             bill_dict[stage] = to_datetime(bill_dict[stage])
@@ -107,7 +109,8 @@ class Federal_Bills(object):
                         bill_dict[senate_stages[i+1]] = datetime.date(d.year+1, d.month, d.day)
 
         print(bill_year, bill_dict[INTRO_HOUSE], bill_dict[PASSED_HOUSE],
-              bill_dict[INTRO_SENATE], bill_dict[PASSED_SENATE], bill_dict[CHAMBER])
+              bill_dict[INTRO_SENATE], bill_dict[PASSED_SENATE],
+              bill_dict[ASSENT_DATE], bill_dict[CHAMBER])
         return(bill_dict)
 
     @property
@@ -118,7 +121,16 @@ class Federal_Bills(object):
 class Bill(object):
 
     def __init__(self, initial_data):
-        self.initial_data = initial_data
+        self.bill_data = initial_data
+        self.chamber = initial_data[CHAMBER]
+        self.short_title = initial_data[SHORT_TITLE]
+        self.intro_house = initial_data[INTRO_HOUSE]
+        self.passed_house = initial_data[PASSED_HOUSE]
+        self.intro_senate = initial_data[INTRO_SENATE]
+        self.passed_house = initial_data[PASSED_SENATE]
+        self.assent_date = initial_data[ASSENT_DATE]
+        self.url = initial_data[URL]
+        self.act_no = initial_data[ACT_NO]
 
     def get_bill_summary(self, bill_url_string):
         try:
@@ -175,8 +187,11 @@ class Bill(object):
 
 fb = Federal_Bills()
 
+
 print(fb.data[3])
 print()
-url = fb.data[3]["URL"]
-print(url)
-print()
+url = fb.data[3]
+b = Bill(fb.data[3])
+
+print(b.url)
+print(b.intro_house)
