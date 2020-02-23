@@ -1,18 +1,13 @@
-version: 3.7
-
-orbs:
-  python: circleci/python@0.2.1
-
+version: 2
 jobs:
-  build-and-test:
-    executor: python/default
+  build:
+    docker:
+      - image: circleci/python:3.6
     steps:
       - checkout
       - run:
-          command: ausbills/test.py
-          name: Test
+          command: |
+            pip install -r requirements.txt
+            python3 ausbills/test.py
 
-workflows:
-  main:
-    jobs:
-      - build-and-test
+
