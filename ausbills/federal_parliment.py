@@ -19,7 +19,7 @@ SUMMARY = "Summary"
 bills_legislation_url = "https://www.aph.gov.au/Parliamentary_Business/Bills_Legislation/Bills_Lists/Details_page?blsId=legislation%2fbillslst%2fbillslst_c203aa1c-1876-41a8-bc76-1de328bdb726"
 
 
-class Bills(object):
+class All_Bills(object):
     _bills_data = []
     chambers = ["House", "Senate"]
     this_year = datetime.datetime.now().year
