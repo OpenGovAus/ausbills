@@ -71,21 +71,43 @@ class Federal_Bills(object):
 
     def _convert_to_datetime(self, bill_dict):
         bill_year = self.this_year
+
+        def to_datetime(indate):
+            if indate != "" and '/' in indate:
+                tempdate = indate.split('/')
+                outdate = datetime.date(
+                    bill_year, int(tempdate[1]), int(tempdate[0]))
+            else:
+                outdate = None
+            return(outdate)
+
         for i in range(6):
             year = self.this_year - i
             if str(year) in bill_dict[SHORT_TITLE]:
                 bill_year = year
-        if bill_dict[INTRO_HOUSE] != "":
-            intro_house = bill_dict[INTRO_HOUSE].split('/')
-            bill_dict[INTRO_HOUSE] = datetime.date(
-                bill_year, int(intro_house[1]), int(intro_house[0]))
-        else:
-            bill_dict[INTRO_HOUSE] = None
+        house_stages = [INTRO_HOUSE, PASSED_HOUSE, INTRO_SENATE, PASSED_SENATE]
+        senate_stages = [INTRO_SENATE, PASSED_SENATE, INTRO_HOUSE, PASSED_HOUSE]
 
-        passed_house = bill_dict[PASSED_HOUSE].split('/')
-        into_senaet = bill_dict[INTRO_SENATE].split('/')
-        passed_senate = bill_dict[PASSED_SENATE].split('/')
-        print(bill_year, bill_dict[INTRO_HOUSE], bill_dict[SHORT_TITLE])
+        for stage in house_stages:
+            bill_dict[stage] = to_datetime(bill_dict[stage])
+
+        if bill_dict[CHAMBER] == self.chambers[0]:
+            for i in range(len(house_stages)-1):
+                if bill_dict[house_stages[i]] is not None and bill_dict[house_stages[i+1]] is not None:
+                    if bill_dict[house_stages[i]] > bill_dict[house_stages[i+1]]:
+                        print("switch")
+                        d = bill_dict[house_stages[i+1]]
+                        bill_dict[house_stages[i+1]] = datetime.date(d.year+1, d.month, d.day)
+        elif bill_dict[CHAMBER] == self.chambers[1]:
+            for i in range(len(senate_stages)-1):
+                if bill_dict[senate_stages[i]] is not None and bill_dict[senate_stages[i+1]] is not None:
+                    if bill_dict[senate_stages[i]] > bill_dict[senate_stages[i+1]]:
+                        print("switch")
+                        d = bill_dict[senate_stages[i+1]]
+                        bill_dict[senate_stages[i+1]] = datetime.date(d.year+1, d.month, d.day)
+
+        print(bill_year, bill_dict[INTRO_HOUSE], bill_dict[PASSED_HOUSE],
+              bill_dict[INTRO_SENATE], bill_dict[PASSED_SENATE], bill_dict[CHAMBER])
         return(bill_dict)
 
     @property
