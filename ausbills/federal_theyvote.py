@@ -1,7 +1,6 @@
 import os
 import json
 import requests
-import pandas as pd
 
 
 API_KEY = os.environ.get('THEYVOTE_API_KEY', None)
@@ -16,4 +15,5 @@ current_people = json.loads(response.content)
 """
 
 for person in current_people:
-    print(person['id'], person['latest_member']['name']['first'],person['latest_member']['name']['last'])
+    print(person['id'], person['latest_member']['name']
+          ['first'], person['latest_member']['name']['last'])

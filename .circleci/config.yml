@@ -7,8 +7,5 @@ jobs:
       - checkout
       - run:
           command: |
-            pip install pandas
             pip install -r requirements.txt
             python3 ausbills/test.py
-
-
