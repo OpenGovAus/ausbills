@@ -54,7 +54,7 @@ class All_Bills(object):
                 row_dict = self._convert_to_datetime(row_dict)
                 self._bills_data.append(row_dict)
             except Exception as e:
-                print("Bad data", e)
+                print("Bad data", e, ' - ', row_dict[SHORT_TITLE])
 
     def _get_row_data(self, tds):
         row_data = []
@@ -73,12 +73,12 @@ class All_Bills(object):
         bill_year = self.this_year
 
         def to_datetime(indate):
-            if indate != "" and '/' in indate:
-                tempdate = indate.split('/')
-                outdate = datetime.date(
-                    bill_year, int(tempdate[1]), int(tempdate[0]))
-            else:
-                outdate = None
+            outdate = None
+            if indate is not None:
+                if indate != "" and '/' in indate:
+                    tempdate = indate.split('/')
+                    outdate = datetime.date(
+                        bill_year, int(tempdate[1]), int(tempdate[0]))
             return(outdate)
 
         for i in range(6):
@@ -97,20 +97,18 @@ class All_Bills(object):
             for i in range(len(house_stages)-1):
                 if bill_dict[house_stages[i]] is not None and bill_dict[house_stages[i+1]] is not None:
                     if bill_dict[house_stages[i]] > bill_dict[house_stages[i+1]]:
-                        print("switch")
                         d = bill_dict[house_stages[i+1]]
                         bill_dict[house_stages[i+1]] = datetime.date(d.year+1, d.month, d.day)
         elif bill_dict[CHAMBER] == self.chambers[1]:
             for i in range(len(senate_stages)-1):
                 if bill_dict[senate_stages[i]] is not None and bill_dict[senate_stages[i+1]] is not None:
                     if bill_dict[senate_stages[i]] > bill_dict[senate_stages[i+1]]:
-                        print("switch")
                         d = bill_dict[senate_stages[i+1]]
                         bill_dict[senate_stages[i+1]] = datetime.date(d.year+1, d.month, d.day)
 
-        print(bill_year, bill_dict[INTRO_HOUSE], bill_dict[PASSED_HOUSE],
-              bill_dict[INTRO_SENATE], bill_dict[PASSED_SENATE],
-              bill_dict[ASSENT_DATE], bill_dict[CHAMBER])
+        # print(bill_year, bill_dict[INTRO_HOUSE], bill_dict[PASSED_HOUSE],
+        #       bill_dict[INTRO_SENATE], bill_dict[PASSED_SENATE],
+        #       bill_dict[ASSENT_DATE], bill_dict[CHAMBER])
         return(bill_dict)
 
     @property
@@ -121,18 +119,35 @@ class All_Bills(object):
 class Bill(object):
 
     def __init__(self, initial_data):
-        self.bill_data = initial_data
-        self.chamber = initial_data[CHAMBER]
-        self.short_title = initial_data[SHORT_TITLE]
-        self.intro_house = initial_data[INTRO_HOUSE]
-        self.passed_house = initial_data[PASSED_HOUSE]
-        self.intro_senate = initial_data[INTRO_SENATE]
-        self.passed_house = initial_data[PASSED_SENATE]
-        self.assent_date = initial_data[ASSENT_DATE]
-        self.url = initial_data[URL]
-        self.act_no = initial_data[ACT_NO]
-        self.bill_url = requests.get(self.url).text
-        self.bill_soup = BeautifulSoup(self.bill_url, 'lxml')
+        if isinstance(initial_data, dict):
+            try:
+                self.url = initial_data[URL]
+                self.bill_data = initial_data
+                self.chamber = initial_data[CHAMBER]
+                self.short_title = initial_data[SHORT_TITLE]
+                self.intro_house = initial_data[INTRO_HOUSE]
+                self.passed_house = initial_data[PASSED_HOUSE]
+                self.intro_senate = initial_data[INTRO_SENATE]
+                self.passed_house = initial_data[PASSED_SENATE]
+                self.assent_date = initial_data[ASSENT_DATE]
+                self.act_no = initial_data[ACT_NO]
+                self.bill_url = requests.get(self.url).text
+                self.bill_soup = BeautifulSoup(self.bill_url, 'lxml')
+            except Exception as e:
+                raise Exception('Dict must have the correct keys. Missing key '
+                                + str(e))
+        else:
+            raise TypeError('Must be a dict of the correct format. See docs.')
+
+    def __str__(self):
+        return(self.short_title)
+
+    def __repr__(self):
+        return('<{}.{} : {} object at {}>'.format(
+            self.__class__.__module__,
+            self.__class__.__name__,
+            self.url.split('=')[-1],
+            hex(id(self))))
 
     @property
     def summary(self):
@@ -191,27 +206,3 @@ class Bill(object):
             return(tr.find_all('dd')[0].text.replace(' ', '').replace('\n', ''))
         except Exception as e:
             return('')
-
-# for testing
-
-
-# fb = Federal_Bills()
-
-
-# print(fb.data[3])
-# print()
-# url = fb.data[3]
-# b = Bill(fb.data[3])
-#
-# print(b.url)
-# print(b.intro_house)
-# print(b.summary)
-# print(b.sponsor)
-# print(b.bill_text_links)
-# print(b.explanatory_memoranda_links)
-#
-# for bd in fb.data:
-#     b = Bill(bd)
-#     print(b.summary)
-#     print(b.sponsor)
-#     print('---------')
