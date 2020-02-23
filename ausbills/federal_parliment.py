@@ -1,7 +1,5 @@
 from bs4 import BeautifulSoup
 import requests
-import pandas as pd
-import asyncio
 import datetime
 
 
@@ -121,8 +119,8 @@ class Bill(object):
     def __init__(self, initial_data):
         if isinstance(initial_data, dict):
             try:
-                self.url = initial_data[URL]
                 self.bill_data = initial_data
+                self.url = initial_data[URL]
                 self.chamber = initial_data[CHAMBER]
                 self.short_title = initial_data[SHORT_TITLE]
                 self.intro_house = initial_data[INTRO_HOUSE]
