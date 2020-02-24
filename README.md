@@ -40,8 +40,14 @@ bill_five = all_bills.data[5]
 bill = Bill(bill_five)
 print(bill.summary)
 print(bill.sponsor)
-print(bill.bill_text_links)
-print(bill.explanatory_memoranda_links)
+bill.bill_text_links
+bill.explanatory_memoranda_links
+```
+
+or you can get the data dump:
+
+```python
+bill.data
 ```
 
 ## TheVoteForYou API

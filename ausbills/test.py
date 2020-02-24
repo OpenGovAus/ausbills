@@ -44,6 +44,7 @@ for bd in all_bills:
     print(b.sponsor)
     print(b.bill_text_links)
     print(b.explanatory_memoranda_links)
+    print(b.data)
 
 for i in range(len(all_bills)):
     b = Bill(all_bills[i]["URL"])
@@ -54,3 +55,4 @@ for i in range(len(all_bills)):
     print(b.sponsor)
     print(b.bill_text_links)
     print(b.explanatory_memoranda_links)
+    print(b.data)
