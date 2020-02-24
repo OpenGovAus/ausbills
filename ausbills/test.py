@@ -1,4 +1,4 @@
-from federal_parliment import All_Bills, Bill
+from federal_parliment import Bill, all_bills
 import datetime
 
 CHAMBER = "Chamber"
@@ -11,15 +11,17 @@ ASSENT_DATE = "Assent Date"
 URL = "URL"
 ACT_NO = "Act No."
 
-test_all_bills = All_Bills()
+
+print(all_bills[3])
+
 
 NoneType = type(None)
 
-assert isinstance(test_all_bills.data, list)
+assert isinstance(all_bills, list)
 
-for bd in test_all_bills.data:
+for bd in all_bills:
     assert isinstance(bd[URL], str)
-    print(bd[URL].split(':')[0], bd[URL])
+    print(bd[URL])
     assert '=' in bd[URL]
     assert bd[URL].split(':')[0] in ['http', 'https']
     assert bd[CHAMBER] in ["House", "Senate"]
@@ -35,6 +37,16 @@ for bd in test_all_bills.data:
     # Do the bill tests better
 
     b = Bill(bd)
+    print(b.summary)
+    print(b.url)
+    print(b.intro_house)
+    print(b.summary)
+    print(b.sponsor)
+    print(b.bill_text_links)
+    print(b.explanatory_memoranda_links)
+
+for i in range(len(all_bills)):
+    b = Bill(all_bills[i]["URL"])
     print(b.summary)
     print(b.url)
     print(b.intro_house)
