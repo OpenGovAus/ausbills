@@ -34,7 +34,7 @@ print(all_bills)
 bill_five = all_bills.data[5]
 ```
 
-`all_bills.data` is a list of all current bills and some basic data in the form of a dict. The rest of the data may be obtained via the **Bill** object. To initialise a **Bill** object:
+`all_bills.data` is a list of all current bills and some basic data in the form of a dict. The rest of the data may be obtained via the **Bill()** object. To an instance of **Bill()**:
 
 ```python
 bill = Bill(bill_five)
@@ -44,7 +44,13 @@ bill.bill_text_links
 bill.explanatory_memoranda_links
 ```
 
-or you can get the data dump:
+_or_ you can use the url string to create an instance of **Bill()**:
+
+```python
+bill = Bill(bill_five["URL"])
+```
+
+and you can get the data dump as a dict:
 
 ```python
 bill.data
@@ -58,5 +64,4 @@ I decided (for now) to add functions to obtain relevant data via the [TheyVoteFo
 
 ### Todo
 
-- bills in All_Bills ?
 - get more bill data
