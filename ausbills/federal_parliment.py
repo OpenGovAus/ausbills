@@ -13,6 +13,9 @@ ASSENT_DATE = "Assent Date"
 URL = "URL"
 ACT_NO = "Act No."
 SUMMARY = "Summary"
+DOC = "doc"
+PDF = "pdf"
+HTML = "html"
 
 bills_legislation_url = "https://www.aph.gov.au/Parliamentary_Business/Bills_Legislation/Bills_Lists/Details_page?blsId=legislation%2fbillslst%2fbillslst_c203aa1c-1876-41a8-bc76-1de328bdb726"
 
@@ -196,9 +199,12 @@ class Bill(object):
             links = []
             for a in tr.find_all('td')[1].find_all('a'):
                 links.append(a['href'])
-            return(links)
+            links_dict = {DOC: links[0],
+                          PDF: links[1],
+                          HTML: links[2]}
+            return(links_dict)
         except Exception as e:
-            return([])
+            return({})
 
     def get_bill_em_links(self):
         try:
@@ -207,9 +213,12 @@ class Bill(object):
             links = []
             for a in tr.find_all('td')[1].find_all('a'):
                 links.append(a['href'])
-            return(links)
+            links_dict = {DOC: links[0],
+                          PDF: links[1],
+                          HTML: links[2]}
+            return(links_dict)
         except Exception as e:
-            return([])
+            return({})
 
     def get_sponsor(self):
         try:
