@@ -13,6 +13,9 @@ ASSENT_DATE = "Assent Date"
 URL = "URL"
 ACT_NO = "Act No."
 SUMMARY = "Summary"
+DOC = "doc"
+PDF = "pdf"
+HTML = "html"
 
 bills_legislation_url = "https://www.aph.gov.au/Parliamentary_Business/Bills_Legislation/Bills_Lists/Details_page?blsId=legislation%2fbillslst%2fbillslst_c203aa1c-1876-41a8-bc76-1de328bdb726"
 
@@ -104,9 +107,6 @@ class All_Bills(object):
                         d = bill_dict[senate_stages[i+1]]
                         bill_dict[senate_stages[i+1]] = datetime.date(d.year+1, d.month, d.day)
 
-        # print(bill_year, bill_dict[INTRO_HOUSE], bill_dict[PASSED_HOUSE],
-        #       bill_dict[INTRO_SENATE], bill_dict[PASSED_SENATE],
-        #       bill_dict[ASSENT_DATE], bill_dict[CHAMBER])
         return(bill_dict)
 
     @property
@@ -114,28 +114,44 @@ class All_Bills(object):
         return(self._bills_data)
 
 
-class Bill(object):
+all_bills = All_Bills().data
 
-    def __init__(self, initial_data):
-        if isinstance(initial_data, dict):
+
+class Bill(object):
+    _all_bills = all_bills
+
+    def __init__(self, input):
+        if isinstance(input, dict):
             try:
-                self.bill_data = initial_data
-                self.url = initial_data[URL]
-                self.chamber = initial_data[CHAMBER]
-                self.short_title = initial_data[SHORT_TITLE]
-                self.intro_house = initial_data[INTRO_HOUSE]
-                self.passed_house = initial_data[PASSED_HOUSE]
-                self.intro_senate = initial_data[INTRO_SENATE]
-                self.passed_house = initial_data[PASSED_SENATE]
-                self.assent_date = initial_data[ASSENT_DATE]
-                self.act_no = initial_data[ACT_NO]
-                self.bill_url = requests.get(self.url).text
-                self.bill_soup = BeautifulSoup(self.bill_url, 'lxml')
+                self.create_vars(input)
             except Exception as e:
                 raise Exception('Dict must have the correct keys. Missing key '
                                 + str(e))
+        elif isinstance(input, str):
+            t_data = False
+            for bill in self._all_bills:
+                if input == bill["URL"]:
+                    t_data = bill
+            if t_data:
+                self.create_vars(t_data)
+            else:
+                raise TypeError('Must be a valid url string')
         else:
-            raise TypeError('Must be a dict of the correct format. See docs.')
+            raise TypeError('Must be a dict of the correct format OR a valid url string. See docs.')
+
+    def create_vars(self, initial_data):
+        self.bill_data = initial_data
+        self.url = initial_data[URL]
+        self.chamber = initial_data[CHAMBER]
+        self.short_title = initial_data[SHORT_TITLE]
+        self.intro_house = initial_data[INTRO_HOUSE]
+        self.passed_house = initial_data[PASSED_HOUSE]
+        self.intro_senate = initial_data[INTRO_SENATE]
+        self.passed_house = initial_data[PASSED_SENATE]
+        self.assent_date = initial_data[ASSENT_DATE]
+        self.act_no = initial_data[ACT_NO]
+        self.bill_url = requests.get(self.url).text
+        self.bill_soup = BeautifulSoup(self.bill_url, 'lxml')
 
     def __str__(self):
         return(self.short_title)
@@ -183,9 +199,12 @@ class Bill(object):
             links = []
             for a in tr.find_all('td')[1].find_all('a'):
                 links.append(a['href'])
-            return(links)
+            links_dict = {DOC: links[0],
+                          PDF: links[1],
+                          HTML: links[2]}
+            return(links_dict)
         except Exception as e:
-            return([])
+            return({})
 
     def get_bill_em_links(self):
         try:
@@ -194,9 +213,12 @@ class Bill(object):
             links = []
             for a in tr.find_all('td')[1].find_all('a'):
                 links.append(a['href'])
-            return(links)
+            links_dict = {DOC: links[0],
+                          PDF: links[1],
+                          HTML: links[2]}
+            return(links_dict)
         except Exception as e:
-            return([])
+            return({})
 
     def get_sponsor(self):
         try:
