@@ -12,10 +12,13 @@ PASSED_SENATE = "Passed Senate"
 ASSENT_DATE = "Assent Date"
 URL = "URL"
 ACT_NO = "Act No."
-SUMMARY = "Summary"
 DOC = "doc"
 PDF = "pdf"
 HTML = "html"
+SUMMARY = "Summary"
+SPONSOR = "Sponsor"
+TEXT_LINK = "text link"
+EM_LINK = "em link"
 
 bills_legislation_url = "https://www.aph.gov.au/Parliamentary_Business/Bills_Legislation/Bills_Lists/Details_page?blsId=legislation%2fbillslst%2fbillslst_c203aa1c-1876-41a8-bc76-1de328bdb726"
 
@@ -140,7 +143,7 @@ class Bill(object):
             raise TypeError('Must be a dict of the correct format OR a valid url string. See docs.')
 
     def create_vars(self, initial_data):
-        self.bill_data = initial_data
+        self._bill_data = initial_data
         self.url = initial_data[URL]
         self.chamber = initial_data[CHAMBER]
         self.short_title = initial_data[SHORT_TITLE]
@@ -226,3 +229,15 @@ class Bill(object):
             return(tr.find_all('dd')[0].text.replace(' ', '').replace('\n', ''))
         except Exception as e:
             return('')
+
+    @property
+    def data(self):
+        self._bill_data[SUMMARY] = self.summary
+        self._bill_data[SPONSOR] = self.sponsor
+        self._bill_data[TEXT_LINK + ' ' + DOC] = self.bill_text_links[DOC]
+        self._bill_data[TEXT_LINK + ' ' + PDF] = self.bill_text_links[PDF]
+        self._bill_data[TEXT_LINK + ' ' + HTML] = self.bill_text_links[HTML]
+        self._bill_data[EM_LINK + ' ' + DOC] = self.explanatory_memoranda_links[DOC]
+        self._bill_data[EM_LINK + ' ' + PDF] = self.explanatory_memoranda_links[PDF]
+        self._bill_data[EM_LINK + ' ' + HTML] = self.explanatory_memoranda_links[HTML]
+        return(self._bill_data)
