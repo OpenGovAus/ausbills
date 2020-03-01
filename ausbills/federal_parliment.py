@@ -19,6 +19,7 @@ SUMMARY = "Summary"
 SPONSOR = "Sponsor"
 TEXT_LINK = "text link"
 EM_LINK = "em link"
+ID = "id"
 
 bills_legislation_url = "https://www.aph.gov.au/Parliamentary_Business/Bills_Legislation/Bills_Lists/Details_page?blsId=legislation%2fbillslst%2fbillslst_c203aa1c-1876-41a8-bc76-1de328bdb726"
 
@@ -55,6 +56,7 @@ class All_Bills(object):
                 for i in range(len(self.headings)):
                     row_dict[self.headings[i]] = row_data[i]
                 row_dict[URL] = bill_url_string
+                row_dict[ID] = bill_url_string.split('?')[-1].split('=')[-1]
                 row_dict = self._convert_to_datetime(row_dict)
                 self._bills_data.append(row_dict)
             except Exception as e:
