@@ -135,7 +135,7 @@ class Bill(object):
         elif isinstance(input, str):
             t_data = False
             for bill in self._all_bills:
-                if input == bill["URL"]:
+                if input == bill[URL] or input == bill[ID]:
                     t_data = bill
             if t_data:
                 self.create_vars(t_data)
