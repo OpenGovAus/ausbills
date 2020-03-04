@@ -14,13 +14,15 @@ Current governments that are supported:
 
 ## Contributing
 
+We use **BeautifulSoup** to scrape the bills from the Bills websites. so make sure you become familiar with the docs [here](https://www.crummy.com/software/BeautifulSoup/bs4/doc/).
+
 Fork the repo and install requirements
 
 ```
 pip3 install -r requirements.txt
 ```
 
-Each state should their own bills and corresponding website. Add a python file for a new state in the /ausbills dir. the python file should have the naming convention: `wa_bills.py` for _Western Australia_ for example. Make sure we all agree on method/object/output conventions (use federal_bills as a guide). Once you are happy, update the README on method usage and make a Pull Request.
+Each state should their own bills and corresponding website. Add a python file for a new state in the /ausbills dir. the python file should have the naming convention: [`wa_parliment.py`](ausbills/wa_parliment.py) for [_Western Australia_](https://www.parliament.wa.gov.au/parliament/bills.nsf/screenWebCurrentBills) for example. Make sure we all agree on method/object/output conventions (use federal_bills as a guide). Once you are happy, update the README on method usage and make a Pull Request.
 
 ## Australian Federal Government
 
@@ -29,7 +31,7 @@ This module had methods for scraping the [Australian Federal Parliament](https:/
 The bills are scraped to get data from both the house and the senate:
 
 ```python
-from ausbills.federal_parliment import all_bills, Bill
+from ausbills.federal_parliment import All_Bills, Bill
 print(all_bills)
 bill_five = all_bills.data[5]
 ```

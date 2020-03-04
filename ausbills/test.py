@@ -1,5 +1,5 @@
 from federal_parliment import Bill, all_bills
-import datetime
+
 
 CHAMBER = "Chamber"
 SHORT_TITLE = "Short Title"
@@ -7,7 +7,7 @@ INTRO_HOUSE = "Intro House"
 PASSED_HOUSE = "Passed House"
 INTRO_SENATE = "Intro Senate"
 PASSED_SENATE = "Passed Senate"
-ASSENT_DATE = "Assent Date"
+
 URL = "URL"
 ACT_NO = "Act No."
 
