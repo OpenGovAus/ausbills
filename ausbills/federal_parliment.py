@@ -57,6 +57,8 @@ class All_Bills(object):
                     row_dict[self.headings[i]] = row_data[i]
                 row_dict[URL] = bill_url_string
                 row_dict[ID] = bill_url_string.split('?')[-1].split('=')[-1]
+                row_dict[SHORT_TITLE] = row_dict[SHORT_TITLE].replace('\n', '').replace('    ', '').replace(
+                    '\r', '').replace('\u2014\u0080\u0094', ' ').replace('\u00a0', ',').replace('$', 'AUD ')
                 row_dict = self._convert_to_datetime(row_dict)
                 self._bills_data.append(row_dict)
             except Exception as e:
@@ -192,7 +194,8 @@ class Bill(object):
         if div:
             for span_tag in div.find_all('span'):
                 span_tag.unwrap()
-            summary = div.p.text.replace('\n', '').replace('    ', '')
+            summary = div.p.text.replace('\n', '').replace('    ', '').replace(
+                '\r', '').replace('\u2014\u0080\u0094', ' ').replace('\u00a0', ',').replace('$', 'AUD ')
         else:
             summary = ""
         return(summary)
@@ -228,7 +231,7 @@ class Bill(object):
     def get_sponsor(self):
         try:
             tr = self.bill_soup.find("div", id='main_0_billSummary_sponsorPanel')
-            return(tr.find_all('dd')[0].text.replace(' ', '').replace('\n', ''))
+            return(tr.find_all('dd')[0].text.replace(' ', '').replace('\n', '').replace('\r', ''))
         except Exception as e:
             return('')
 
