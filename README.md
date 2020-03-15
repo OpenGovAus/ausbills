@@ -36,7 +36,7 @@ print(all_bills)
 bill_five = all_bills.data[5]
 ```
 
-`all_bills.data` is a list of all current bills and some basic data in the form of a dict. The rest of the data may be obtained via the **Bill()** object. To an instance of **Bill()**:
+`all_bills.data` is a list of all current bills and some basic data in the form of a dict. The rest of the data may be obtained via the **Bill()** object.
 
 ```python
 bill = Bill(bill_five)
