@@ -58,12 +58,7 @@ and you can get the data dump as a dict:
 bill.data
 ```
 
-## TheVoteForYou API
-
-_Under dev_
-
-I decided (for now) to add functions to obtain relevant data via the [TheyVoteForYou API](https://theyvoteforyou.org.au/help/data).
-
 ### Todo
 
-- get more bill data
+- get second reading debate links
+- get third reading links
