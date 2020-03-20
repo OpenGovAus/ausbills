@@ -24,9 +24,13 @@ pip3 install -r requirements.txt
 
 Each state should their own bills and corresponding website. Add a python file for a new state in the /ausbills dir. the python file should have the naming convention: [`wa_parliment.py`](ausbills/wa_parliment.py) for [_Western Australia_](https://www.parliament.wa.gov.au/parliament/bills.nsf/screenWebCurrentBills) for example. Make sure we all agree on method/object/output conventions (use federal_bills as a guide). Once you are happy, update the README on method usage and make a Pull Request.
 
+#### Updating package:
+
+Edit `VERSION` in [setup.py](setup.py)
 
 ```
-git tag -a v0.0.8 -m "update version 0.0.8"
+git tag -a 0.1.0 -m "update version 0.1.0"
+git push origin 0.1.0
 ```
 
 
