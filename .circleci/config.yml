@@ -14,7 +14,7 @@ workflows:
               only: /[0-9]+(\.[0-9]+)*/
             branches:
               ignore: /.*/
-jobs:  
+jobs:
   build:
     docker:
       - image: circleci/python:3.6
@@ -23,25 +23,37 @@ jobs:
       - run:
           command: |
             pip install -r requirements.txt
-            python3 ausbills/test.py
+
       - run:
+          filters:
+            - branches:
+              - only: master
           name: verify git tag vs. version
           command: |
             python3 -m venv venv
             . venv/bin/activate
             python setup.py verify
       - run:
+          filters:
+            - branches:
+              - only: master
           name: init .pypirc
           command: |
             echo -e "[pypi]" >> ~/.pypirc
             echo -e "username = Kipling" >> ~/.pypirc
             echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
       - run:
+          filters:
+            - branches:
+              - only: master
           name: create packages
           command: |
             python setup.py sdist
             python setup.py bdist_wheel
       - run:
+          filters:
+            - branches:
+              - only: master
           name: upload to pypi
           command: |
             . venv/bin/activate
