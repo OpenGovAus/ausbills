@@ -27,6 +27,7 @@ Each state should their own bills and corresponding website. Add a python file f
 
 ```
 python setup.py sdist
+git tag -a v0.0.8 -m "update version 0.0.8"
 ```
 
 
