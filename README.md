@@ -66,7 +66,7 @@ Change VERSION in [setup.py](setup.py), then:
 
 ```
 git tag -a 0.1.0 -m "update version 0.1.0"
-git push -d origin 0.1.0
+git push origin 0.1.0
 ```
 
 
