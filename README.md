@@ -12,23 +12,6 @@ Current governments that are supported:
 
 - Australian Federal Government
 
-## Contributing
-
-We use **BeautifulSoup** to scrape the bills from the Bills websites. so make sure you become familiar with the docs [here](https://www.crummy.com/software/BeautifulSoup/bs4/doc/).
-
-Fork the repo and install requirements
-
-```
-pip3 install -r requirements.txt
-```
-
-Each state should their own bills and corresponding website. Add a python file for a new state in the /ausbills dir. the python file should have the naming convention: [`wa_parliment.py`](ausbills/wa_parliment.py) for [_Western Australia_](https://www.parliament.wa.gov.au/parliament/bills.nsf/screenWebCurrentBills) for example. Make sure we all agree on method/object/output conventions (use federal_bills as a guide). Once you are happy, update the README on method usage and make a Pull Request.
-
-
-```
-git tag -a v0.0.8 -m "update version 0.0.8"
-```
-
 
 ## Australian Federal Government
 
@@ -63,6 +46,25 @@ and you can get the data dump as a dict:
 ```python
 bill.data
 ```
+
+## Contributing
+
+We use **BeautifulSoup** to scrape the bills from the Bills websites. so make sure you become familiar with the docs [here](https://www.crummy.com/software/BeautifulSoup/bs4/doc/).
+
+Fork the repo and install requirements
+
+```
+pip3 install -r requirements.txt
+```
+
+Each state should their own bills and corresponding website. Add a python file for a new state in the /ausbills dir. the python file should have the naming convention: [`wa_parliment.py`](ausbills/wa_parliment.py) for [_Western Australia_](https://www.parliament.wa.gov.au/parliament/bills.nsf/screenWebCurrentBills) for example. Make sure we all agree on method/object/output conventions (use federal_bills as a guide). Once you are happy, update the README on method usage and make a Pull Request.
+
+
+```
+git tag -a 0.1.0 -m "update version 0.1.0"
+```
+
+
 
 ### Todo
 
