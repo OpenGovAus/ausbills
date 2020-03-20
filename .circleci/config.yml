@@ -24,6 +24,9 @@ jobs:
           command: |
             pip install -r requirements.txt
             python3 ausbills/test.py
+  deploy:
+    steps:
+      - checkout
       - run:
           name: verify git tag vs. version
           command: |
