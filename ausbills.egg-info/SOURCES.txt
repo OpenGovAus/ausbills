@@ -1,6 +1,9 @@
 README.md
 setup.py
 ausbills/__init__.py
+ausbills/federal_parliment.py
+ausbills/test.py
+ausbills/wa_parliment.py
 ausbills.egg-info/PKG-INFO
 ausbills.egg-info/SOURCES.txt
 ausbills.egg-info/dependency_links.txt

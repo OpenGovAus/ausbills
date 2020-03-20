@@ -1,37 +1,75 @@
 Metadata-Version: 2.1
 Name: ausbills
-Version: 0.0.1
+Version: 0.0.7
 Summary: Get parliament bills for Australian governments.
 Home-page: https://github.com/KipCrossing/Aus-Bills-Discord-Bot
 Author: Kipling Crossing
 Author-email: kip.crossing@gmail.com
 License: UNKNOWN
-Description: # Aus Bills Discord Bot
+Description: # Aus Bills
         
         This is a package is for obtaining parliament bills for Australian governments.
+        
+        ## Install via pip
+        
+        ```
+        pip3 install git+https://github.com/KipCrossing/Aus-Bills
+        ```
         
         Current governments that are supported:
         
         - Australian Federal Government
         
+        ## Contributing
+        
+        We use **BeautifulSoup** to scrape the bills from the Bills websites. so make sure you become familiar with the docs [here](https://www.crummy.com/software/BeautifulSoup/bs4/doc/).
+        
+        Fork the repo and install requirements
+        
+        ```
+        pip3 install -r requirements.txt
+        ```
+        
+        Each state should their own bills and corresponding website. Add a python file for a new state in the /ausbills dir. the python file should have the naming convention: [`wa_parliment.py`](ausbills/wa_parliment.py) for [_Western Australia_](https://www.parliament.wa.gov.au/parliament/bills.nsf/screenWebCurrentBills) for example. Make sure we all agree on method/object/output conventions (use federal_bills as a guide). Once you are happy, update the README on method usage and make a Pull Request.
+        
         ## Australian Federal Government
         
-        This module had methods for scraping the [Australian Federal Parliament](https://www.aph.gov.au/Parliamentary_Business/Bills_Legislation/Bills_Lists/Details_page?blsId=legislation%2fbillslst%2fbillslst_c203aa1c-1876-41a8-bc76-1de328bdb726) website, using _beautiful soup_, and send to separate Senate and House of Representatives Discord channels as embeds that can be called throughout Discord server.
+        This module had methods for scraping the [Australian Federal Parliament](https://www.aph.gov.au/Parliamentary_Business/Bills_Legislation/Bills_Lists/Details_page?blsId=legislation%2fbillslst%2fbillslst_c203aa1c-1876-41a8-bc76-1de328bdb726) website, using _beautiful soup_.
         
-        The bills are scraped to get data from upper(senate) and lower house bills are:
-        
-        ```python
-        import ausbills
-        ausbills.get_house_bills()
-        ausbills.get_senate_bills()
-        ```
-        
-        And can easily be turned into pandas dataframes:
+        The bills are scraped to get data from both the house and the senate:
         
         ```python
-        df_lower = pd.DataFrame(ausbills.get_house_bills())
-        df_upper = pd.DataFrame(ausbills.get_senate_bills())
+        from ausbills.federal_parliment import all_bills, Bill
+        print(all_bills)
+        bill_five = all_bills.data[5]
         ```
+        
+        `all_bills.data` is a list of all current bills and some basic data in the form of a dict. The rest of the data may be obtained via the **Bill()** object.
+        
+        ```python
+        bill = Bill(bill_five)
+        print(bill.summary)
+        print(bill.sponsor)
+        bill.bill_text_links
+        bill.explanatory_memoranda_links
+        ```
+        
+        _or_ you can use the url string to create an instance of **Bill()**:
+        
+        ```python
+        bill = Bill(bill_five["URL"])
+        ```
+        
+        and you can get the data dump as a dict:
+        
+        ```python
+        bill.data
+        ```
+        
+        ### Todo
+        
+        - get second reading debate links
+        - get third reading links
         
 Platform: UNKNOWN
 Classifier: Programming Language :: Python :: 3

@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="ausbills",  # Replace with your own username
-    version="0.0.6",
+    version="0.0.7",
     author="Kipling Crossing",
     author_email="kip.crossing@gmail.com",
     description="Get parliament bills for Australian governments.",
