@@ -20,6 +20,7 @@ SPONSOR = "Sponsor"
 TEXT_LINK = "text link"
 EM_LINK = "em link"
 ID = "id"
+READING = 'reading'
 
 bills_legislation_url = "https://www.aph.gov.au/Parliamentary_Business/Bills_Legislation/Bills_Lists/Details_page?blsId=legislation%2fbillslst%2fbillslst_c203aa1c-1876-41a8-bc76-1de328bdb726"
 
@@ -201,18 +202,38 @@ class Bill(object):
         return(summary)
 
     def get_bill_text_links(self):
-        try:
-            tr = self.bill_soup.find(
-                "tr", id='main_0_textOfBillReadingControl_readingItemRepeater_trFirstReading1_0')
-            links = []
-            for a in tr.find_all('td')[1].find_all('a'):
-                links.append(a['href'])
-            links_dict = {DOC: links[0],
-                          PDF: links[1],
-                          HTML: links[2]}
-            return(links_dict)
-        except Exception as e:
-            return({})
+        empyt_link_dict = {DOC: '',
+                           PDF: '',
+                           HTML: ''}
+        all_texts = []
+        tr_code = 'main_0_textOfBillReadingControl_readingItemRepeater_trFirstReading1_'
+        for code_n in range(3):
+            try:
+                tr = self.bill_soup.find(
+                    "tr", id=tr_code+str(code_n))
+                links = []
+                for a in tr.find_all('td')[1].find_all('a'):
+                    links.append(a['href'])
+                links_dict = {DOC: links[0],
+                              PDF: links[1],
+                              HTML: links[2]}
+                print(links_dict)
+                all_texts.append(links_dict)
+            except Exception as e:
+                links_dict = empyt_link_dict.copy()
+        reading_dict = {
+            'first': empyt_link_dict.copy(),
+            'third': empyt_link_dict.copy(),
+            'aspassed': empyt_link_dict.copy(),
+        }
+
+        for text in all_texts:
+            for typ in reading_dict.keys():
+                if typ in text[PDF]:
+                    reading_dict[typ] = text
+        print('-----------------------------')
+        print(reading_dict)
+        return(reading_dict)
 
     def get_bill_em_links(self):
         try:
@@ -237,12 +258,18 @@ class Bill(object):
 
     @property
     def data(self):
+        self._bill_data[READING] = 'first'
+        text_type = [DOC, PDF, HTML]
         self._bill_data[SUMMARY] = self.summary
         self._bill_data[SPONSOR] = self.sponsor
-        self._bill_data[TEXT_LINK + ' ' + DOC] = self.bill_text_links[DOC]
-        self._bill_data[TEXT_LINK + ' ' + PDF] = self.bill_text_links[PDF]
-        self._bill_data[TEXT_LINK + ' ' + HTML] = self.bill_text_links[HTML]
-        self._bill_data[EM_LINK + ' ' + DOC] = self.explanatory_memoranda_links[DOC]
-        self._bill_data[EM_LINK + ' ' + PDF] = self.explanatory_memoranda_links[PDF]
-        self._bill_data[EM_LINK + ' ' + HTML] = self.explanatory_memoranda_links[HTML]
+        for TEXT in text_type:
+            for reading in ['first', 'third', 'aspassed']:
+                if self.bill_text_links[reading][TEXT] != '':
+                    self._bill_data[TEXT_LINK + ' ' + TEXT] = self.bill_text_links[reading][TEXT]
+                    self._bill_data[READING] = reading
+                    print()
+                    print(reading)
+                    print()
+            self._bill_data[EM_LINK + ' ' + TEXT] = self.explanatory_memoranda_links[TEXT]
+
         return(self._bill_data)
