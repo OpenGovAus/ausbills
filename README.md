@@ -5,7 +5,7 @@ This is a package is for obtaining parliament bills for Australian governments.
 ## Install via pip
 
 ```
-pip3 install git+https://github.com/KipCrossing/Aus-Bills
+pip install ausbills
 ```
 
 Current governments that are supported:
@@ -26,7 +26,6 @@ Each state should their own bills and corresponding website. Add a python file f
 
 
 ```
-python setup.py sdist
 git tag -a v0.0.8 -m "update version 0.0.8"
 ```
 
