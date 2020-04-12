@@ -3,22 +3,22 @@ import requests
 import datetime
 
 
-CHAMBER = "Chamber"
-SHORT_TITLE = "Short Title"
-INTRO_HOUSE = "Intro House"
-PASSED_HOUSE = "Passed House"
-INTRO_SENATE = "Intro Senate"
-PASSED_SENATE = "Passed Senate"
-ASSENT_DATE = "Assent Date"
-URL = "URL"
-ACT_NO = "Act No."
+CHAMBER = "chamber"
+SHORT_TITLE = "short_title"
+INTRO_HOUSE = "intro_house"
+PASSED_HOUSE = "passed_house"
+INTRO_SENATE = "intro_senate"
+PASSED_SENATE = "passed_senate"
+ASSENT_DATE = "assent_date"
+URL = "url"
+ACT_NO = "act_no"
 DOC = "doc"
 PDF = "pdf"
 HTML = "html"
-SUMMARY = "Summary"
-SPONSOR = "Sponsor"
-TEXT_LINK = "text link"
-EM_LINK = "em link"
+SUMMARY = "summary"
+SPONSOR = "sponsor"
+TEXT_LINK = "text_link"
+EM_LINK = "em_link"
 ID = "id"
 READING = 'reading'
 
@@ -55,7 +55,8 @@ class All_Bills(object):
                 row_data = self._get_row_data(tr.findAll('td'))
                 row_dict = {CHAMBER: self.chambers[table_no]}
                 for i in range(len(self.headings)):
-                    row_dict[self.headings[i]] = row_data[i]
+                    row_dict[self.headings[i].lower().replace(
+                        " ", "_").replace(".", "")] = row_data[i]
                 row_dict[URL] = bill_url_string
                 row_dict[ID] = bill_url_string.split('?')[-1].split('=')[-1]
                 row_dict[SHORT_TITLE] = row_dict[SHORT_TITLE].replace('\n', '').replace('    ', '').replace(
@@ -134,7 +135,7 @@ class Bill(object):
                 self.create_vars(input)
             except Exception as e:
                 raise Exception('Dict must have the correct keys. Missing key '
-                                + str(e))ederal_bills.get_house_bills()
+                                + str(e))
         elif isinstance(input, str):
             t_data = False
             for bill in self._all_bills:
@@ -171,10 +172,8 @@ class Bill(object):
             self.url.split('=')[-1],
             hex(id(self))))
 
-
-ederal_bills.get_house_bills()
-  @property
-   def summary(self):
+    @property
+    def summary(self):
         return(self.get_bill_summary())
 
     @property
@@ -259,13 +258,13 @@ ederal_bills.get_house_bills()
     def data(self):
         self._bill_data[READING] = 'first'
         text_type = [DOC, PDF, HTML]
-        self._bill_data[SUMMARY] = self.summederal_bills.get_house_bills()ary
+        self._bill_data[SUMMARY] = self.summary
         self._bill_data[SPONSOR] = self.sponsor
         for TEXT in text_type:
             for reading in ['first', 'third', 'aspassed']:
                 if self.bill_text_links[reading][TEXT] != '':
-                    self._bill_data[TEXT_LINK + ' ' + TEXT] = self.bill_text_links[reading][TEXT]
+                    self._bill_data[TEXT_LINK + '_' + TEXT] = self.bill_text_links[reading][TEXT]
                     self._bill_data[READING] = reading
-            self._bill_data[EM_LINK + ' ' + TEXT] = self.explanatory_memoranda_links[TEXT]
+            self._bill_data[EM_LINK + '_' + TEXT] = self.explanatory_memoranda_links[TEXT]
 
         return(self._bill_data)
