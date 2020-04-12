@@ -20,8 +20,8 @@ SPONSOR = "sponsor"
 TEXT_LINK = "text_link"
 EM_LINK = "em_link"
 ID = "id"
-READING = 'reading'
-
+CURRENT_READING = "current_reading"
+READINGS = "readings"
 bills_legislation_url = "https://www.aph.gov.au/Parliamentary_Business/Bills_Legislation/Bills_Lists/Details_page?blsId=legislation%2fbillslst%2fbillslst_c203aa1c-1876-41a8-bc76-1de328bdb726"
 
 
@@ -256,15 +256,16 @@ class Bill(object):
 
     @property
     def data(self):
-        self._bill_data[READING] = 'first'
+        self._bill_data[CURRENT_READING] = 'first'
         text_type = [DOC, PDF, HTML]
         self._bill_data[SUMMARY] = self.summary
         self._bill_data[SPONSOR] = self.sponsor
+        self._bill_data[READINGS] = self.bill_text_links
         for TEXT in text_type:
             for reading in ['first', 'third', 'aspassed']:
                 if self.bill_text_links[reading][TEXT] != '':
                     self._bill_data[TEXT_LINK + '_' + TEXT] = self.bill_text_links[reading][TEXT]
-                    self._bill_data[READING] = reading
+                    self._bill_data[CURRENT_READING] = reading
             self._bill_data[EM_LINK + '_' + TEXT] = self.explanatory_memoranda_links[TEXT]
 
         return(self._bill_data)
