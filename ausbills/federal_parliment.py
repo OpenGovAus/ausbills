@@ -134,7 +134,7 @@ class Bill(object):
                 self.create_vars(input)
             except Exception as e:
                 raise Exception('Dict must have the correct keys. Missing key '
-                                + str(e))
+                                + str(e))ederal_bills.get_house_bills()
         elif isinstance(input, str):
             t_data = False
             for bill in self._all_bills:
@@ -171,8 +171,10 @@ class Bill(object):
             self.url.split('=')[-1],
             hex(id(self))))
 
-    @property
-    def summary(self):
+
+ederal_bills.get_house_bills()
+  @property
+   def summary(self):
         return(self.get_bill_summary())
 
     @property
@@ -217,7 +219,6 @@ class Bill(object):
                 links_dict = {DOC: links[0],
                               PDF: links[1],
                               HTML: links[2]}
-                print(links_dict)
                 all_texts.append(links_dict)
             except Exception as e:
                 links_dict = empyt_link_dict.copy()
@@ -231,8 +232,6 @@ class Bill(object):
             for typ in reading_dict.keys():
                 if typ in text[PDF]:
                     reading_dict[typ] = text
-        print('-----------------------------')
-        print(reading_dict)
         return(reading_dict)
 
     def get_bill_em_links(self):
@@ -260,16 +259,13 @@ class Bill(object):
     def data(self):
         self._bill_data[READING] = 'first'
         text_type = [DOC, PDF, HTML]
-        self._bill_data[SUMMARY] = self.summary
+        self._bill_data[SUMMARY] = self.summederal_bills.get_house_bills()ary
         self._bill_data[SPONSOR] = self.sponsor
         for TEXT in text_type:
             for reading in ['first', 'third', 'aspassed']:
                 if self.bill_text_links[reading][TEXT] != '':
                     self._bill_data[TEXT_LINK + ' ' + TEXT] = self.bill_text_links[reading][TEXT]
                     self._bill_data[READING] = reading
-                    print()
-                    print(reading)
-                    print()
             self._bill_data[EM_LINK + ' ' + TEXT] = self.explanatory_memoranda_links[TEXT]
 
         return(self._bill_data)
