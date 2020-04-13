@@ -12,7 +12,7 @@ Current governments that are supported:
 
 - Australian Federal Government
 
-
+---
 
 ## Australian Federal Government
 
@@ -32,14 +32,26 @@ bill_five = all_bills.data[5]
 bill = Bill(bill_five)
 print(bill.summary)
 print(bill.sponsor)
-bill.bill_text_links
-bill.explanatory_memoranda_links
+print(bill.bill_text_links)
+print(bill.explanatory_memoranda_links)
 ```
 
 _or_ you can use the url string to create an instance of **Bill()**:
 
 ```python
-bill = Bill(bill_five["URL"])
+bill = Bill(bill_five["url"])
+```
+
+_or_ the id
+
+```python
+bill = Bill(bill_five["id"])
+```
+
+You may also change the date format:
+
+```python
+bill = Bill(bill_five["id"],"DD/MM/YYYY")
 ```
 
 and you can get the data dump as a dict:
@@ -47,6 +59,8 @@ and you can get the data dump as a dict:
 ```python
 bill.data
 ```
+
+---
 
 ## Contributing
 
@@ -59,6 +73,8 @@ pip3 install -r requirements.txt
 ```
 
 Each state should their own bills and corresponding website. Add a python file for a new state in the /ausbills dir. the python file should have the naming convention: [`wa_parliment.py`](ausbills/wa_parliment.py) for [_Western Australia_](https://www.parliament.wa.gov.au/parliament/bills.nsf/screenWebCurrentBills) for example. Make sure we all agree on method/object/output conventions (use federal_bills as a guide). Once you are happy, update the README on method usage and make a Pull Request.
+
+---
 
 #### Upgrade package
 
@@ -73,5 +89,4 @@ git push origin 0.1.0
 
 ### Todo
 
-- get second reading debate links
-- get third reading links
+- Write better usage docs

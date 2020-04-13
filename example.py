@@ -1,15 +1,12 @@
 from ausbills.federal_parliment import all_bills, Bill
+import json
 
-print(all_bills)
+outlist = []
 
-print(all_bills[10]["url"])
+for bill in all_bills:
+    b_data = Bill(bill["id"]).data
+    print(b_data["short_title"])
+    outlist.append(b_data)
 
-print('')
-print('')
-print('')
-
-print(Bill(all_bills[10]["url"]).data)
-
-print('')
-
-print(Bill(all_bills[10]["url"]).bill_text_links)
+with open('bill_data.json', 'w') as outfile:
+    json.dump(outlist, outfile)
