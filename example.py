@@ -4,6 +4,10 @@ print(all_bills)
 
 print(all_bills[10]["url"])
 
+print('')
+print('')
+print('')
+
 print(Bill(all_bills[10]["url"]).data)
 
 print('')

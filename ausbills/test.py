@@ -39,11 +39,11 @@ for bd in all_bills:
     b = Bill(bd)
     assert isinstance(b.summary, str)
     assert isinstance(b.url, str)
-    # assert isinstance(b.intro_house, str)
+    assert isinstance(b.intro_house, (datetime.date, NoneType))
     assert isinstance(b.sponsor, str)
     assert isinstance(b.bill_text_links, dict)
-
     assert isinstance(b.explanatory_memoranda_links, dict)
     assert isinstance(b.data, dict)
+    assert isinstance(b.data[INTRO_HOUSE], str)
 
 # fix datetime input

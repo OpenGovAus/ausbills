@@ -129,10 +129,12 @@ all_bills = All_Bills().data
 class Bill(object):
     _all_bills = all_bills
 
-    def __init__(self, input):
+    def __init__(self, input, date_format="YYYY-MM-DD"):
+        self.date_format = date_format
         if isinstance(input, dict):
             try:
                 self.create_vars(input)
+                self.date_to_string()
             except Exception as e:
                 raise Exception('Dict must have the correct keys. Missing key '
                                 + str(e))
@@ -143,6 +145,7 @@ class Bill(object):
                     t_data = bill
             if t_data:
                 self.create_vars(t_data)
+                self.date_to_string()
             else:
                 raise TypeError('Must be a valid url string')
         else:
@@ -161,6 +164,31 @@ class Bill(object):
         self.act_no = initial_data[ACT_NO]
         self.bill_url = requests.get(self.url).text
         self.bill_soup = BeautifulSoup(self.bill_url, 'lxml')
+
+    def date_to_string(self):
+        house_stages = [INTRO_HOUSE, PASSED_HOUSE,
+                        INTRO_SENATE, PASSED_SENATE, ASSENT_DATE]
+        for stage in house_stages:
+            self._bill_data[stage] = self._format_date(self._bill_data[stage])
+
+    def _format_date(self, indate):
+        template = self.date_format
+        if indate is not None and not isinstance(indate, str):
+            if indate.month < 10 and indate.day < 10:
+                outdate = template.replace(
+                    "YYYY", str(indate.year)).replace("MM", '0' + str(indate.month)).replace("DD", '0' + str(indate.day))
+            elif indate.month < 10:
+                outdate = template.replace(
+                    "YYYY", str(indate.year)).replace("MM", '0' + str(indate.month)).replace("DD", str(indate.day))
+            elif indate.day < 10:
+                outdate = template.replace(
+                    "YYYY", str(indate.year)).replace("MM", str(indate.month)).replace("DD", '0' + str(indate.day))
+            else:
+                outdate = template.replace(
+                    "YYYY", str(indate.year)).replace("MM", str(indate.month)).replace("DD", str(indate.day))
+        else:
+            outdate = ''
+        return outdate
 
     def __str__(self):
         return(self.short_title)
