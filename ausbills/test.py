@@ -1,15 +1,16 @@
 from federal_parliment import Bill, all_bills
 import datetime
 
-CHAMBER = "Chamber"
-SHORT_TITLE = "Short Title"
-INTRO_HOUSE = "Intro House"
-PASSED_HOUSE = "Passed House"
-INTRO_SENATE = "Intro Senate"
-PASSED_SENATE = "Passed Senate"
-ASSENT_DATE = "Assent Date"
-URL = "URL"
-ACT_NO = "Act No."
+CHAMBER = "chamber"
+SHORT_TITLE = "short_title"
+INTRO_HOUSE = "intro_house"
+PASSED_HOUSE = "passed_house"
+INTRO_SENATE = "intro_senate"
+PASSED_SENATE = "passed_senate"
+ASSENT_DATE = "assent_date"
+URL = "url"
+ACT_NO = "act_no"
+ID = "id"
 
 
 print(all_bills[3])
@@ -21,7 +22,7 @@ assert isinstance(all_bills, list)
 
 for bd in all_bills:
     assert isinstance(bd[URL], str)
-    print(bd[URL])
+    print(bd[ID])
     assert '=' in bd[URL]
     assert bd[URL].split(':')[0] in ['http', 'https']
     assert bd[CHAMBER] in ["House", "Senate"]
@@ -32,27 +33,17 @@ for bd in all_bills:
     assert isinstance(bd[PASSED_SENATE], (datetime.date, NoneType))
     assert isinstance(bd[ASSENT_DATE], (datetime.date, NoneType))
     # assert isinstance(bd[ACT_NO], (int, NoneType))
-    print(bd[SHORT_TITLE])
 
     # Do the bill tests better
 
     b = Bill(bd)
-    print(b.summary)
-    print(b.url)
-    print(b.intro_house)
-    print(b.summary)
-    print(b.sponsor)
-    print(b.bill_text_links)
-    print(b.explanatory_memoranda_links)
-    print(b.data)
+    assert isinstance(b.summary, str)
+    assert isinstance(b.url, str)
+    # assert isinstance(b.intro_house, str)
+    assert isinstance(b.sponsor, str)
+    assert isinstance(b.bill_text_links, dict)
 
-for i in range(len(all_bills)):
-    b = Bill(all_bills[i]["URL"])
-    print(b.summary)
-    print(b.url)
-    print(b.intro_house)
-    print(b.summary)
-    print(b.sponsor)
-    print(b.bill_text_links)
-    print(b.explanatory_memoranda_links)
-    print(b.data)
+    assert isinstance(b.explanatory_memoranda_links, dict)
+    assert isinstance(b.data, dict)
+
+# fix datetime input
