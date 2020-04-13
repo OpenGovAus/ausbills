@@ -3,7 +3,7 @@ import os
 import sys
 from setuptools.command.install import install
 
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -31,7 +31,7 @@ setuptools.setup(
     version=VERSION,
     author="Kipling Crossing",
     author_email="kip.crossing@gmail.com",
-    description="Get parliament bills for Australian governments.",
+    description="Get current parliament bills from Australian governments.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/KipCrossing/Aus-Bills-Discord-Bot",
