@@ -22,7 +22,7 @@ assert isinstance(all_bills, list)
 
 for bd in all_bills:
     assert isinstance(bd[URL], str)
-    print(bd[ID])
+    print(bd[ID] + " - " + bd[SHORT_TITLE])
     assert '=' in bd[URL]
     assert bd[URL].split(':')[0] in ['http', 'https']
     assert bd[CHAMBER] in ["House", "Senate"]
