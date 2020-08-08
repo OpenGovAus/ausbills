@@ -20,7 +20,7 @@ NoneType = type(None)
 
 assert isinstance(all_bills, list)
 
-for bd in all_bills:
+for bd in all_bills[:5]:
     assert isinstance(bd[URL], str)
     print(bd[ID] + " - " + bd[SHORT_TITLE])
     assert '=' in bd[URL]
