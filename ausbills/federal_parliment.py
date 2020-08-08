@@ -209,6 +209,10 @@ class Bill(object):
         return(self.get_sponsor())
 
     @property
+    def portfolio(self):
+        return(self.get_portfolio())
+
+    @property
     def bill_text_links(self):
         return(self.get_bill_text_links())
 
@@ -278,6 +282,13 @@ class Bill(object):
     def get_sponsor(self):
         try:
             tr = self.bill_soup.find("div", id='main_0_billSummary_sponsorPanel')
+            return(tr.find_all('dd')[0].text.replace(' ', '').replace('\n', '').replace('\r', ''))
+        except Exception as e:
+            return('')
+
+    def get_portfolio(self):
+        try:
+            tr = self.bill_soup.find("div", id='main_0_billSummary_portfolioPanel')
             return(tr.find_all('dd')[0].text.replace(' ', '').replace('\n', '').replace('\r', ''))
         except Exception as e:
             return('')
