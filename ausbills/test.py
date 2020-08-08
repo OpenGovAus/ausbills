@@ -45,5 +45,6 @@ for bd in all_bills:
     assert isinstance(b.explanatory_memoranda_links, dict)
     assert isinstance(b.data, dict)
     assert isinstance(b.data[INTRO_HOUSE], str)
+    assert isinstance(b.portfolio, str)
 
 # fix datetime input
