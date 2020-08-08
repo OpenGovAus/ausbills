@@ -299,7 +299,7 @@ class Bill(object):
         text_type = [DOC, PDF, HTML]
         self._bill_data[SUMMARY] = self.summary
         self._bill_data[SPONSOR] = self.sponsor
-        self._bill_data[PORTFOLIO] = self.PORTFOLIO
+        self._bill_data[PORTFOLIO] = self.portfolio
         self._bill_data[READINGS] = self.bill_text_links
         for TEXT in text_type:
             for reading in ['first', 'third', 'aspassed']:
