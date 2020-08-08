@@ -25,7 +25,11 @@ class All_Bills(object):
         # Remove table heading
         rows.pop(0)
 
-        print(rows)
+    def _get_origin_chamber(self, data):
+        house = data.find('article', class_='la')
+        senate = data.find('article', class_='lc')
+        return('House' if house else 'Senate' if senate else None)
+
 
     @property
     def data(self):
