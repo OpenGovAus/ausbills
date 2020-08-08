@@ -2,7 +2,8 @@ from bs4 import BeautifulSoup
 import requests
 import datetime
 
-URL = "https://www.parliament.wa.gov.au/parliament/bills.nsf/WebAllBills?openview&start=1&count=3000"
+BASE_URL = 'https://www.parliament.wa.gov.au'
+URL = f'{BASE_URL}/parliament/bills.nsf/WebAllBills?openview&start=1&count=3000'
 
 class All_Bills(object):
     _bills_data = []
@@ -24,6 +25,21 @@ class All_Bills(object):
         rows = table.findAll('tr')
         # Remove table heading
         rows.pop(0)
+
+        for row in rows:
+            try:
+                bill_link = f'{BASE_URL}{row.a["href"]}'
+                bill = {
+                    'chamber': self._get_origin_chamber(row.td),
+                    'short_title': row.a.text.strip(),
+                    'link': bill_link,
+                    'ID': bill_link[-32:len(bill_link)]
+                }
+
+                self._bills_data.append(bill)
+
+            except Exception as e:
+                print(f' --- Bad Data --- \n {e}')
 
     def _get_origin_chamber(self, data):
         house = data.find('article', class_='la')
