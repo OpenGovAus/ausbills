@@ -1,5 +1,6 @@
 from federal_parliment import Bill, all_bills
 import datetime
+import random
 
 CHAMBER = "chamber"
 SHORT_TITLE = "short_title"
@@ -13,14 +14,17 @@ ACT_NO = "act_no"
 ID = "id"
 
 
-print(all_bills[3])
+print(len(all_bills))
 
+random_numbers = [int(random.random()*len(all_bills)) for i in range(5)]
+
+bills_sample = [all_bills[i] for i in random_numbers]
 
 NoneType = type(None)
 
 assert isinstance(all_bills, list)
 
-for bd in all_bills[:5]:
+for bd in bills_sample:
     assert isinstance(bd[URL], str)
     print(bd[ID] + " - " + bd[SHORT_TITLE])
     assert '=' in bd[URL]
@@ -46,5 +50,6 @@ for bd in all_bills[:5]:
     assert isinstance(b.data, dict)
     assert isinstance(b.data[INTRO_HOUSE], str)
     assert isinstance(b.portfolio, str)
+    print(b.portfolio, b.sponsor)
 
 # fix datetime input
