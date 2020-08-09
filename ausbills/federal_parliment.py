@@ -283,14 +283,14 @@ class Bill(object):
     def get_sponsor(self):
         try:
             tr = self.bill_soup.find("div", id='main_0_billSummary_sponsorPanel')
-            return(tr.find_all('dd')[0].text.replace(' ', '').replace('\n', '').replace('\r', ''))
+            return(tr.find_all('dd')[0].text.replace('  ', '').replace('\n', '').replace('\r', ''))
         except Exception as e:
             return('')
 
     def get_portfolio(self):
         try:
             tr = self.bill_soup.find("div", id='main_0_billSummary_portfolioPanel')
-            return(tr.find_all('dd')[0].text.replace(' ', '').replace('\n', '').replace('\r', ''))
+            return(tr.find_all('dd')[0].text.replace('  ', '').replace('\n', '').replace('\r', ''))
         except Exception as e:
             return('')
 
