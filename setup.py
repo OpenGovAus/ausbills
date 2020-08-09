@@ -34,7 +34,7 @@ setuptools.setup(
     description="Get current parliament bills from Australian governments.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/KipCrossing/Aus-Bills-Discord-Bot",
+    url="https://github.com/KipCrossing/Aus-Bills",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
