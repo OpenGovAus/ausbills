@@ -17,6 +17,7 @@ PDF = "pdf"
 HTML = "html"
 SUMMARY = "summary"
 SPONSOR = "sponsor"
+PORTFOLIO = "portfolio"
 TEXT_LINK = "text_link"
 EM_LINK = "em_link"
 ID = "id"
@@ -209,6 +210,10 @@ class Bill(object):
         return(self.get_sponsor())
 
     @property
+    def portfolio(self):
+        return(self.get_portfolio())
+
+    @property
     def bill_text_links(self):
         return(self.get_bill_text_links())
 
@@ -278,7 +283,14 @@ class Bill(object):
     def get_sponsor(self):
         try:
             tr = self.bill_soup.find("div", id='main_0_billSummary_sponsorPanel')
-            return(tr.find_all('dd')[0].text.replace(' ', '').replace('\n', '').replace('\r', ''))
+            return(tr.find_all('dd')[0].text.replace('  ', '').replace('\n', '').replace('\r', ''))
+        except Exception as e:
+            return('')
+
+    def get_portfolio(self):
+        try:
+            tr = self.bill_soup.find("div", id='main_0_billSummary_portfolioPanel')
+            return(tr.find_all('dd')[0].text.replace('  ', '').replace('\n', '').replace('\r', ''))
         except Exception as e:
             return('')
 
@@ -288,6 +300,7 @@ class Bill(object):
         text_type = [DOC, PDF, HTML]
         self._bill_data[SUMMARY] = self.summary
         self._bill_data[SPONSOR] = self.sponsor
+        self._bill_data[PORTFOLIO] = self.portfolio
         self._bill_data[READINGS] = self.bill_text_links
         for TEXT in text_type:
             for reading in ['first', 'third', 'aspassed']:
