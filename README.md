@@ -23,7 +23,7 @@ The bills are scraped to get data from both the house and the senate:
 ```python
 from ausbills.federal_parliment import all_bills, Bill
 print(all_bills)
-bill_five = all_bills.data[5]
+bill_five = all_bills[5]
 ```
 
 `all_bills.data` is a list of all current bills and some basic data in the form of a dict. The rest of the data may be obtained via the **Bill()** object.
