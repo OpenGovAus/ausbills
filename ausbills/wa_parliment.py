@@ -57,11 +57,10 @@ all_bills = All_Bills().data
 
 class Bill(object):
 
-    def __init__(self, input):
-        pass
-
-    def get_bill_summary(self):
-        pass
+    def __init__(self, bill):
+        self.url = bill['link']
+        self.page = requests.get(self.url, verify=False)
+        self.soup = BeautifulSoup(self.page.content, 'html.parser')
 
     def get_sponsor(self):
         pass
@@ -74,7 +73,7 @@ class Bill(object):
 
     @property
     def summary(self):
-        return(self.get_bill_summary())
+        return(self.soup.findAll('td')[4].text)
 
     @property
     def sponsor(self):
