@@ -63,22 +63,13 @@ class Bill(object):
         self.page = requests.get(self.url, verify=False)
         self.soup = BeautifulSoup(self.page.content, 'html.parser')
 
-    def get_sponsor(self):
-        pass
-
-    def get_bill_text_links(self):
-        pass
-
-    def explanatory_memoranda_links(self):
-        pass
-
     @property
     def summary(self):
         return(self.soup.findAll('td')[4].text)
 
     @property
     def sponsor(self):
-        return(self.get_sponsor())
+        pass
 
     @property
     def bill_text_links(self):
@@ -87,7 +78,7 @@ class Bill(object):
 
     @property
     def explanatory_memoranda_links(self):
-        return(self.get_bill_em_links())
+        pass
 
     @property
     def data(self):
