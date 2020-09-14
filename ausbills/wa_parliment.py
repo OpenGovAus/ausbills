@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 import requests
 import datetime
+import re
 
 BASE_URL = 'https://www.parliament.wa.gov.au'
 URL = f'{BASE_URL}/parliament/bills.nsf/WebAllBills?openview&start=1&count=3000'
@@ -81,7 +82,8 @@ class Bill(object):
 
     @property
     def bill_text_links(self):
-        return(self.get_bill_text_links())
+        links = {'as_introduced': BASE_URL + self.soup.find(text=re.compile('Download the Bill as Introduced')).parent.get('href')}
+        return(links)
 
     @property
     def explanatory_memoranda_links(self):
