@@ -59,3 +59,35 @@ class Bill(object):
 
     def __init__(self, input):
         pass
+
+    def get_bill_summary(self):
+        pass
+
+    def get_sponsor(self):
+        pass
+
+    def get_bill_text_links(self):
+        pass
+
+    def explanatory_memoranda_links(self):
+        pass
+
+    @property
+    def summary(self):
+        return(self.get_bill_summary())
+
+    @property
+    def sponsor(self):
+        return(self.get_sponsor())
+
+    @property
+    def bill_text_links(self):
+        return(self.get_bill_text_links())
+
+    @property
+    def explanatory_memoranda_links(self):
+        return(self.get_bill_em_links())
+
+    @property
+    def data(self):
+        pass
