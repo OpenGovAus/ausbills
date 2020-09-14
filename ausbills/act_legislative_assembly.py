@@ -16,11 +16,22 @@ class All_Bills(object):
     def _build_dataset(self):
         ninth_siteData = requests.get(ninth_assembly_bills).text
         eighth_siteData = requests.get(eighth_assembly_bills).text
-
+            
         try:
-            soup = BeautifulSoup(ninth_siteData)
-            soup = BeautifulSoup(eighth_siteData)
+            soup = BeautifulSoup(ninth_siteData, 'html.parser')
+            div = soup.find("div", {"id": "main"})
+            billTitles = div.find_all('h4')
+            billData = div.find_all('p')[4:]
+            billPres = []
+            billDescs = []
+
+            for entry in billData:
+                if "<strong>" in str(entry):
+                    billPres.append(entry)
+
+                elif not "<strong>" in str(entry):
+                    billDescs.append(entry)            
 
         except Exception as e:
-            print('Link broken.')
-            print(e)
+                    print('An exception has happened mate')
+                    print(e)
