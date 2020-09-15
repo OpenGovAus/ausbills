@@ -69,7 +69,8 @@ class Bill(object):
 
     @property
     def sponsor(self):
-        pass
+        sponsor = self.soup.find(text=re.compile('Private Members Bill introduced by'))
+        return sponsor.replace('Private Members Bill introduced by ', '') if sponsor else None
 
     @property
     def bill_text_links(self):
