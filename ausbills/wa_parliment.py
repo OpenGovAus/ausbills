@@ -43,9 +43,9 @@ class All_Bills(object):
                 print(f' --- Bad Data --- \n {e}')
 
     def _get_origin_chamber(self, data):
-        house = data.find('article', class_='la')
-        senate = data.find('article', class_='lc')
-        return('House' if house else 'Senate' if senate else None)
+        assembly = data.find('article', class_='la')
+        council = data.find('article', class_='lc')
+        return('Legislative Assembly' if assembly else 'Legislative Council' if council else None)
 
 
     @property
