@@ -82,5 +82,9 @@ class Bill(object):
         pass
 
     @property
+    def number(self):
+        return self.soup.find(text=re.compile('Bill No.')).parent.parent.findNext('td').contents[0]
+
+    @property
     def data(self):
         pass
