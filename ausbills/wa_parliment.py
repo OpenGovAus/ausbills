@@ -86,5 +86,22 @@ class Bill(object):
         return self.soup.find(text=re.compile('Bill No.')).parent.parent.findNext('td').contents[0]
 
     @property
+    def assent(self):
+        assent = {}
+
+        assent_text = self.soup.find(text=re.compile('Royal Assent given'))
+
+        if assent_text:
+            assent_text = assent_text.split('Royal Assent given')
+            # We use strip() here as where the date and act are in the text is varible,
+            # so we cast a larger range and trim any white space that we get.
+            assent['date'] = assent_text[1][0:12].strip()
+            assent['act'] = assent_text[1][23:26].strip()
+
+            return(assent)
+
+        return False
+
+    @property
     def data(self):
         pass
