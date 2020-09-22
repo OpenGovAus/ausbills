@@ -31,8 +31,8 @@ class All_Bills(object):
             try:
                 bill_link = f'{BASE_URL}{row.a["href"]}'
                 bill = {
-                    'chamber': self._get_origin_chamber(row.td),
-                    'short_title': row.a.text.strip(),
+                    'title': row.a.text.strip(),
+                    'origin': self._get_origin_chamber(row.td),
                     'link': bill_link,
                     'id': bill_link[-32:len(bill_link)]
                 }
