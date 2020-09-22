@@ -94,7 +94,8 @@ class Bill(object):
         # We don't want to append None and cause the for loop to operate on this
         if LA_table:
             tables.append(LA_table)
-        elif LC_table:
+
+        if LC_table:
             tables.append(LC_table)
 
         for table in tables:
