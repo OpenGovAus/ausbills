@@ -116,7 +116,7 @@ class Bill(object):
         return(dates)
 
     @property
-    def number(self):
+    def bill_number(self):
         return self.soup.find(text=re.compile('Bill No.')).parent.parent.findNext('td').contents[0]
 
     @property
@@ -130,7 +130,7 @@ class Bill(object):
             # We use strip() here as where the date and act are in the text is varible,
             # so we cast a larger range and trim any white space that we get.
             assent['date'] = assent_text[1][0:12].strip()
-            assent['act'] = assent_text[1][23:26].strip()
+            assent['act_number'] = assent_text[1][23:26].strip()
 
             return(assent)
 
@@ -138,7 +138,7 @@ class Bill(object):
 
     @property
     def data(self):
-        self.bill['number'] = self.number
+        self.bill['bill_number'] = self.bill_number
         self.bill['summary'] = self.summary
         self.bill['sponsor'] = self.sponsor
         self.bill['readings'] = self.bill_text_links
