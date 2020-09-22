@@ -59,6 +59,7 @@ all_bills = All_Bills().data
 class Bill(object):
 
     def __init__(self, bill):
+        self.bill = bill
         self.url = bill['link']
         self.page = requests.get(self.url, verify=False)
         self.soup = BeautifulSoup(self.page.content, 'html.parser')
@@ -137,4 +138,9 @@ class Bill(object):
 
     @property
     def data(self):
-        pass
+        self.bill['number'] = self.number
+        self.bill['summary'] = self.summary
+        self.bill['sponsor'] = self.sponsor
+        self.bill['readings'] = self.bill_text_links
+        self.bill['dates'] = self.dates
+        return(self.bill)
