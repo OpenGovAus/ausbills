@@ -82,6 +82,39 @@ class Bill(object):
         pass
 
     @property
+    def dates(self):
+        dates = {}
+
+        # Get dates related to each chamber
+        tables = []
+        LA_table = self.soup.find('table', class_='bil_table_LA')
+        LC_table = self.soup.find('table', class_='bil_table_LC')
+
+        # We don't want to append None and cause the for loop to operate on this
+        if LA_table:
+            tables.append(LA_table)
+        elif LC_table:
+            tables.append(LC_table)
+
+        for table in tables:
+            chamber = table.find('td').contents[0].replace(' ', '_').lower()
+            dates[chamber] = {}
+
+            rows = table.find_all('tr')
+            rows.pop(0)
+
+            for row in rows:
+                col = row.find_all('td')
+                status = col[0].contents[0].replace(' ', '_').lower()
+                date = re.sub('[^a-zA-Z0-9 ]', '', col[1].contents[0])
+                dates[chamber][status] = date
+
+        # Get assent date and act number or False
+        dates['assent'] = self.assent
+
+        return(dates)
+
+    @property
     def number(self):
         return self.soup.find(text=re.compile('Bill No.')).parent.parent.findNext('td').contents[0]
 
