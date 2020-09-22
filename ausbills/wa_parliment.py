@@ -34,7 +34,7 @@ class All_Bills(object):
                     'chamber': self._get_origin_chamber(row.td),
                     'short_title': row.a.text.strip(),
                     'link': bill_link,
-                    'ID': bill_link[-32:len(bill_link)]
+                    'id': bill_link[-32:len(bill_link)]
                 }
 
                 self._bills_data.append(bill)
