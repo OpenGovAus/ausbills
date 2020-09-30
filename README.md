@@ -97,14 +97,14 @@ git push origin 0.1.0
 
 ### ACT Legislative Assembly Todo
 #### Get Bills:
-##### Bills from 9th Assembly:
-- Get list of bill names found @ https://www.parliament.act.gov.au/parliamentary-business/in-the-chamber/bills/summary_of_bills
-- Get bill metadata from https://www.parliament.act.gov.au/parliamentary-business/in-the-chamber/bills/bills_volume
 
-##### Bills from previous Assemblies:
-###### 8th Assembly (Will encompass 9th assembly at the end of 2020):
-- Get list of bill names from https://www.parliament.act.gov.au/parliamentary-business/in-the-chamber/previous-assemblies/eighth-assembly/bills_list
-- Get bill metadata from https://www.parliament.act.gov.au/parliamentary-business/in-the-chamber/previous-assemblies/eighth-assembly/bills_volume
+##### 9th Assembly:
+
+- Scrape and organise Scrutiny Report names and URLs
+
+##### 8th Assembly:
+
+- Scrape Scrutiny Report names, organise names and URLs
 
 ###### 1st - 7th Assemblies:
 Unfortunately, the ACT Government stores these bill lists as PDF files that don't follow a directory pattern. Instead they're stored in generated SquizMatrix directories. It's easy to scrape the file location though, the only annoying part is scraping the PDFs themselves.
@@ -113,3 +113,5 @@ Unfortunately, the ACT Government stores these bill lists as PDF files that don'
 
 The volume ID differs from Assembly to Assembly and doesn't follow a pattern, but are unlikely to change since different parliamentary sites pull data from these lists, so it's 99% safe to hard-code the URLs, and would be very easy to change should the host files change.
 
+#### Return Bills:
+- Add ```Bill``` class
