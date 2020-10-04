@@ -1,16 +1,20 @@
-from ausbills.federal_parliment import all_bills, Bill
+import hashlib
+
+from ausbills import json_encoder
+from ausbills.federal_parliment import get_all_bills, Bill
 import json
 import random
 
-outlist = []
+out_list = []
 
-for bill in all_bills:
-    b_data = Bill(bill["id"]).data
+for bill in get_all_bills():
+    bill_obj = Bill(bill_id=bill["id"])
+    b_data = bill_obj.data
     print(b_data["short_title"])
-    b_data["yes"] = 500 + int(random.random()*500)
-    b_data["no"] = 500 + int(random.random()*500)
-    b_data["ballotspec_hash"] = "blahblahblahblahblahblahblahblahblah"
-    outlist.append(b_data)
+    print(bill_obj.data)
+    print(dir(bill_obj))
+    b_data["ballotspec_hash"] = hashlib.sha256(bill_obj.to_json().encode()).hexdigest()
+    out_list.append(b_data)
 
 with open('bill_data.json', 'w') as outfile:
-    json.dump(outlist, outfile)
+    json.dump(out_list, outfile, cls=json_encoder.AusBillsJsonEncoder)
