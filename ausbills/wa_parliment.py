@@ -74,7 +74,7 @@ class BillProgress1House:
             if len(font_t_children) < 4:
                 return Nothing
             if len(font_t_children) > 4:
-                log.error(f"WTF: {font_t_children}")
+                log.error(f"This is very unexpected: {font_t_children}")
             date_str, br, p_dot, hansard_link = font_t_children
             hansard_link: Tag
             date = BillProgress.parse_date(date_str)
@@ -240,5 +240,5 @@ def scrape_bill_from_in_prog(bill_p: BillProgress) -> Tuple[BillProgress, Either
 def scrape_all_bills(bills_progs=None, par_reqs=50) -> List[Tuple[BillProgress, Either[str, Bill]]]:
     bills_progs = bills_progs if bills_progs is not None else scrape_all_bill_progs()
     with Pool(par_reqs) as pool:
-        log.warning(f"Starting scrape of {len(bills_progs)} bills with {par_reqs} parallel workers.")
+        log.info(f"Starting scrape of {len(bills_progs)} bills with {par_reqs} parallel workers.")
         return pool.map(scrape_bill_from_in_prog, bills_progs, par_reqs)
