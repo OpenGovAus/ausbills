@@ -1,25 +1,16 @@
-import json
-import os
-import sys
 from dataclasses import dataclass
-from enum import Enum
 from multiprocessing import Pool
-from multiprocessing.pool import IMapIterator
-from pathlib import Path
-from time import time
-from typing import List, TypeVar, NewType, Type, Tuple, Generator, Optional, Iterator, TypedDict
+from typing import List, NewType, Tuple, Optional, TypedDict
 
-from slugify import slugify
+from urlpath import URL
 from bs4 import BeautifulSoup, ResultSet, Tag
 import requests
 from datetime import datetime
 
-from ausbills.json_encoder import AusBillsJsonEncoder
 from ausbills.types_parliament import House
 from ausbills.util.either import Either
 from pymonad.either import Left, Right
 from pymonad.maybe import Maybe, Just, Nothing
-from pymonad.monad import *
 
 from ausbills import get_logger
 from ausbills.util.attr_dict import AttrDict
@@ -28,7 +19,7 @@ from ausbills.util.funcs import chunks
 DATE_FMT_WA = "%{0}d/%{0}m/%y".format('')  # '#' if sys.platform.startswith('win32') else '-')
 
 PdfUrl = NewType('PdfUrl', str)
-Url = NewType('Url', str)
+UrlStr = NewType('UrlStr', str)
 
 log = get_logger(__file__)
 
@@ -39,7 +30,7 @@ current_bills_url = "https://www.parliament.wa.gov.au/parliament/bills.nsf/" \
 all_bills_url = "https://www.parliament.wa.gov.au/parliament/bills.nsf/WebAllBills?openview&start=1&count=30000"
 progress_of_bills_url = "https://www.parliament.wa.gov.au/Parliament/Bills.nsf/screenBillsProgress"
 
-waph_base_url = "https://www.parliament.wa.gov.au"
+waph_base_url = URL("https://www.parliament.wa.gov.au/")
 
 
 def reqs_get_wa_parli(url, *args, **kwargs):
@@ -55,32 +46,10 @@ class ScrapeBillPageException(Exception):
 
 
 @dataclass
-class Bill:
-    name: str
-    bill_no: str
-    url: str
-    # from the detailed page
-    synopsis: str
-    private_members_bill: Maybe[str]
-    status: str
-    bill_history: List[Tuple[str, PdfUrl]]
-    acts_amended: List[Tuple[str, PdfUrl]]
-    related_committee_activity: List[Tuple[str, PdfUrl]]
-    lc_supplementary: List[Tuple[str, PdfUrl]]
-    messages: List[Tuple[str, PdfUrl]]
-    progress_la: List[Tuple[str, datetime]]
-    progress_lc: List[Tuple[str, datetime]]
-    superseded_lc_supplementary: List[Tuple[str, PdfUrl]]
-    comparisons_between_version: Tuple[str, str]
-    conference_of_managers: List[Tuple[str, PdfUrl]]
-    notes: List[str]
-
-
-@dataclass
 class BillProgress1House:
     house: House
     fst_read: Maybe[datetime]
-    snd_read_hansard: Maybe[Tuple[datetime, str, Url]]
+    snd_read_hansard: Maybe[Tuple[datetime, str, UrlStr]]
     snd_read: Maybe[datetime]
     consid_detail: Maybe[datetime]
     amend: Maybe[datetime]
@@ -98,7 +67,8 @@ class BillProgress1House:
         return BillProgress1House(**_d)
 
     @staticmethod
-    def read_snd_and_hansard(td: Tag) -> Maybe[Tuple[datetime, str, Url]]:
+    def read_snd_and_hansard(td: Tag) -> Maybe[Tuple[datetime, str, UrlStr]]:
+        font_t_children = "__UNSET__"
         try:
             font_t_children = list(td.children.__next__().children)
             if len(font_t_children) < 4:
@@ -109,7 +79,7 @@ class BillProgress1House:
             hansard_link: Tag
             date = BillProgress.parse_date(date_str)
             ref = p_dot + hansard_link.text
-            url = hansard_link['href']
+            url = UrlStr(str(waph_base_url / hansard_link['href']))
             if date.is_just():
                 return Just((date.value, ref, url))
         except Exception as e:
@@ -120,7 +90,7 @@ class BillProgress1House:
 @dataclass
 class BillProgress:
     name: str
-    url: Url
+    url: UrlStr
     bill_no: str
     la_progress: BillProgress1House
     lc_progress: BillProgress1House
@@ -129,12 +99,12 @@ class BillProgress:
     @classmethod
     def from_tds(cls, tds: List[Tag]):
         if len(tds) != 15:
-            log.warning(f"Got a row in bills progress page that had length /= 15: [ {', '.join(tds)} ]")
+            log.warning(f"Got a row in bills progress page that had length /= 15: [ {', '.join(map(str, tds))} ]")
             raise ScrapeBillProgressException(
-                f"Got a row in bills progress page that had length /= 15: [ {', '.join(tds)} ]")
+                f"Got a row in bills progress page that had length /= 15: [ {', '.join(map(str, tds))} ]")
         _d = AttrDict()
         _d.name, _d.url = cls.read_bill_name_link(tds[0])
-        _d.url = _d.url if _d.url.startswith('http') else f"{waph_base_url}/{_d.url}"
+        _d.url = _d.url if _d.url.startswith('http') else str(waph_base_url / _d.url)
         _d.bill_no = tds[1].text.strip()
         _d.la_progress = BillProgress1House.from_tds(House.LOWER, tds[2:8])
         _d.lc_progress = BillProgress1House.from_tds(House.UPPER, tds[8:14])
@@ -142,9 +112,9 @@ class BillProgress:
         return BillProgress(**_d)
 
     @staticmethod
-    def read_bill_name_link(td: Tag) -> (str, Url):
+    def read_bill_name_link(td: Tag) -> (str, UrlStr):
         a: Tag = td.children.__next__()
-        return a.text, a['href']
+        return a.text, str(waph_base_url / a['href'])
 
     @staticmethod
     def parse_date(date_text: str) -> Maybe[datetime]:
@@ -159,8 +129,32 @@ class BillProgress:
             dt = datetime.strptime(d_str, DATE_FMT_WA)
             return Just(dt)
         except ScrapeBillPageException as e:
+            print(f"This branch never happened during testing. You should see why this prints if it ever does.")
             raise e
             return Nothing
+
+
+@dataclass
+class Bill:
+    name: str
+    bill_no: str
+    url: str
+    bill_progress: Maybe[BillProgress]
+    # from the detailed page
+    synopsis: str
+    private_members_bill: Maybe[str]
+    status: str
+    bill_history: List[Tuple[str, PdfUrl]]
+    acts_amended: List[Tuple[str, PdfUrl]]
+    related_committee_activity: List[Tuple[str, PdfUrl]]
+    lc_supplementary: List[Tuple[str, PdfUrl]]
+    messages: List[Tuple[str, PdfUrl]]
+    progress_la: List[Tuple[str, datetime]]
+    progress_lc: List[Tuple[str, datetime]]
+    superseded_lc_supplementary: List[Tuple[str, PdfUrl]]
+    comparisons_between_version: Tuple[List[Tuple[str, PdfUrl]], List[Tuple[str, PdfUrl]]]
+    conference_of_managers: List[Tuple[str, PdfUrl]]
+    notes: List[str]
 
 
 def scrape_all_bill_progs():
@@ -179,7 +173,7 @@ def scrape_all_bill_progs():
 
 def a_tag_to_pair(a_tag: Tag) -> Tuple[str, PdfUrl]:
     label: str = a_tag.text.strip()
-    return label, PdfUrl(f"{waph_base_url}/{a_tag['href']}")
+    return label, PdfUrl(str(waph_base_url / a_tag['href']))
 
 
 def li_extract(snd_in_main_pair: Tag) -> List[Tuple[str, PdfUrl]]:
@@ -193,12 +187,14 @@ def progress_extract(prog_table: Optional[Tag]) -> List[Tuple[str, datetime]]:
     if prog_table is None:
         return list()
     rows = list(prog_table.find_all('tr'))[1:]
-    return list((r[0].text.strip(), datetime.strptime(r[2].text.strip(), "%d %b %Y")) for r in (list(row.find_all('td')) for row in rows))
+    return list((r[0].text.strip(), datetime.strptime(r[2].text.strip(), "%d %b %Y")) for r in
+                (list(row.find_all('td')) for row in rows))
 
 
 def scrape_bill_from_in_prog(bill_p: BillProgress) -> Tuple[BillProgress, Either[str, Bill]]:
     try:
-        _d: TypedDict[Bill] = AttrDict(name=bill_p.name, bill_no=bill_p.bill_no, url=bill_p.url)
+        _d: TypedDict[Bill] = AttrDict(name=bill_p.name, bill_no=bill_p.bill_no, url=bill_p.url,
+                                       bill_progress=Just(bill_p))
         page = BeautifulSoup(reqs_get_wa_parli(bill_p.url).text, 'lxml')
         # name, bill_no, synopsys, status
         heading = page.find('table', {'class': 'billHeading'})
@@ -212,7 +208,7 @@ def scrape_bill_from_in_prog(bill_p: BillProgress) -> Tuple[BillProgress, Either
         _d.private_members_bill = Just(heading_tds[5].text.strip()) if len(heading_tds) != 7 else Nothing
         _d.status = heading_tds[6 if _d.private_members_bill.is_nothing() else 7].text.strip()
         main_info = heading.find_next_sibling('table')
-        top_level_trs = main_info.find_all('tr', recursive=False,)
+        top_level_trs = main_info.find_all('tr', recursive=False, )
         main_row_paris = chunks(top_level_trs, 2)
         _d.bill_history = li_extract(main_row_paris.__next__()[1])
         _d.acts_amended = li_extract(main_row_paris.__next__()[1])
@@ -229,8 +225,10 @@ def scrape_bill_from_in_prog(bill_p: BillProgress) -> Tuple[BillProgress, Either
         comparison_1: Tag = main_row_paris.__next__()[1]
         comparison_2: Tag = main_row_paris.__next__()[0]
         # we're now offset by 1 to account for an extra row
-        _d.comparisons_between_version = (comparison_1.encode().decode(), comparison_2.encode().decode())
+        _d.comparisons_between_version = (li_extract(comparison_1), li_extract(comparison_2))
         _d.conference_of_managers = li_extract(main_row_paris.__next__()[0])
+        if len(_d.conference_of_managers) > 0:
+            print(f"found conference_of_managers? {_d.conference_of_managers}")
         _d.notes = list(td.text for td in main_row_paris.__next__()[0].find_all('td'))
         return bill_p, Right(Bill(**_d))
     except Exception as e:

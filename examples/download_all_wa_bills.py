@@ -1,8 +1,14 @@
+import json
+import os
+from pathlib import Path
+
 from slugify import slugify
 
+from ausbills.json_encoder import AusBillsJsonEncoder
 from ausbills.wa_parliment import *
 
-bills_folder = Path(f'wa_bills_out_{int(time())}')
+# bills_folder = Path(f'wa_bills_out_{int(time())}')
+bills_folder = Path(f'wa_bills_out')
 
 
 def main():
