@@ -1,0 +1,9 @@
+.venv/
+.idea/
+*.tmp.json
+*.tmp
+*.log
+wa_bills_out_*
+__pycache__
+wa_bills_out
+bill_data.json
