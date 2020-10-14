@@ -1,5 +1,5 @@
 import io
-from act_legislative_assembly import all_bills
+from act_legislative_assembly import act_all_bills as all_bills
 
 f = open("9th_assembly_demo.txt", "w")
 for bill in range(len(all_bills)):

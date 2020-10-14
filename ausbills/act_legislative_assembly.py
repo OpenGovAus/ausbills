@@ -29,7 +29,7 @@ class All_Bills(object):
         except Exception as e:
             print('An exception ocurred when trying to scrape the 9th Assembly:\n')
             print(e)
-
+    
         try:
             self._scrape_8th_assembly()
         except Exception as e:
@@ -47,14 +47,24 @@ class All_Bills(object):
             h4.replace_with('') # Remove all <h4>s from the soup, this makes it less annoying to get the bill presenter string from <strong> tags. The ACT Government, man, it's weird.
 
         billData = div.find_all(re.compile(r'(div|p)'))
-        billPres = div.find_all('strong')
+        allStrong = div.find_all('strong')
+        dumbDebug = []
+        for strong in range(len(allStrong)):
+            if('This bill' in allStrong[strong].text or 'e bill will also' in allStrong[strong].text):
+                pass
+            else:
+                billPres.append(allStrong[strong])
         for entry in billData:
             if "This bill" in entry.text or "this bill" in entry.text:
                 billDescs.append(entry)
 
         for title in range(len(billTitles)): # Here we loop through every bill and compile its information into an entry in _bills_data
             _bill_title = billTitles[title].text
-            _bill_url = billTitles[title].find('a')['href']
+            a = billTitles[title].find('a')
+            if(a == None):
+                _bill_url = ''
+            else:
+                _bill_url = a['href']
             _bill_description = billDescs[title].text
             _bill_presented_by = self._format_presenter_9th(billPres[title].text)[0][13:]
             _bill_date = self._format_presenter_9th(billPres[title].text)[1]
@@ -131,4 +141,7 @@ class All_Bills(object):
     def data(self):
         return(self._bills_data)
 
-all_bills = All_Bills().data
+act_all_bills = All_Bills().data
+
+class Bill(object):
+    _all_bills = act_all_bills
