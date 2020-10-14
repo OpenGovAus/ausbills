@@ -11,7 +11,7 @@ pip install ausbills
 Current governments that are supported:
 
 - Australian Federal Government
-- Australian Capital Territory Legislative Assembly
+- Australian Capital Territory Government
 
 ---
 
@@ -22,7 +22,8 @@ This module had methods for scraping the [Australian Federal Parliament](https:/
 The bills are scraped to get data from both the house and the senate:
 
 ```python
-from ausbills.federal_parliment import all_bills, Bill
+from ausbills.federal_parliment import get_all_bills, Bill
+all_bills = get_all_bills()
 print(all_bills)
 bill_five = all_bills[5]
 ```
@@ -111,24 +112,3 @@ git push origin 0.1.0
 ### Todo
 
 - Write better usage docs
-
----
-## Australian Capital Territory Legislative Assembly Bills
-
-### ACT Legislative Assembly Todo
-#### Get Bills:
-
-##### 9th Assembly:
-
-- Scrape and organise Scrutiny Report names and URLs
-
-##### 8th Assembly:
-
-- Scrape Scrutiny Report names, organise names and URLs
-
-###### 1st - 7th Assemblies:
-Unfortunately, the ACT Government stores these bill lists as PDF files that don't follow a directory pattern. Instead they're stored in generated SquizMatrix directories. It's easy to scrape the file location though, the only annoying part is scraping the PDFs themselves.
-
-- Get bill metadata from https://www.parliament.act.gov.au/parliamentary-business/in-the-chamber/previous-assemblies/business6/ + appended volume ID
-
-The volume ID differs from Assembly to Assembly and doesn't follow a pattern, but are unlikely to change since different parliamentary sites pull data from these lists, so it's 99% safe to hard-code the URLs, and would be very easy to change should the host files change.

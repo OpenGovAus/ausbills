@@ -1,7 +1,15 @@
-from bs4 import BeautifulSoup
+import json
+
+from bs4 import BeautifulSoup, ResultSet
 import requests
 import datetime
 
+from pymonad.maybe import Maybe, Nothing, Just
+
+from ausbills.json_encoder import AusBillsJsonEncoder
+from ausbills.log import get_logger
+
+log = get_logger(__file__)
 
 CHAMBER = "chamber"
 SHORT_TITLE = "short_title"
@@ -23,10 +31,11 @@ EM_LINK = "em_link"
 ID = "id"
 CURRENT_READING = "current_reading"
 READINGS = "readings"
-bills_legislation_url = "https://www.aph.gov.au/Parliamentary_Business/Bills_Legislation/Bills_Lists/Details_page?blsId=legislation%2fbillslst%2fbillslst_c203aa1c-1876-41a8-bc76-1de328bdb726"
+bills_legislation_url = "https://www.aph.gov.au/Parliamentary_Business/Bills_Legislation/Bills_Lists/Details_page" \
+                        "?blsId=legislation%2fbillslst%2fbillslst_c203aa1c-1876-41a8-bc76-1de328bdb726"
 
 
-class All_Bills(object):
+class AllBills(object):
     _bills_data = []
     chambers = ["House", "Senate"]
     this_year = datetime.datetime.now().year
@@ -43,29 +52,31 @@ class All_Bills(object):
             print(e)
 
     def _scrape_data(self, table_no):
-        website_url = requests.get(bills_legislation_url).text
-        soup = BeautifulSoup(website_url, 'lxml')
+        markup = requests.get(bills_legislation_url).text
+        soup = BeautifulSoup(markup, 'lxml')
         tables = soup.find_all('table')
         trs = tables[table_no].findAll('tr')
         tr = trs.pop(0)
         self.headings = self._get_row_data(tr.findAll('td'))
 
         for tr in trs:
+            row_dict = dict()
             try:
                 bill_url_string = str(tr.a['href'])
                 row_data = self._get_row_data(tr.findAll('td'))
-                row_dict = {CHAMBER: self.chambers[table_no]}
+                row_dict[CHAMBER] = self.chambers[table_no]
                 for i in range(len(self.headings)):
                     row_dict[self.headings[i].lower().replace(
                         " ", "_").replace(".", "")] = row_data[i]
                 row_dict[URL] = bill_url_string
                 row_dict[ID] = bill_url_string.split('?')[-1].split('=')[-1]
-                row_dict[SHORT_TITLE] = row_dict[SHORT_TITLE].replace('\n', '').replace('    ', '').replace(
-                    '\r', '').replace('\u2014\u0080\u0094', ' ').replace('\u00a0', ',').replace('$', 'AUD ')
+                # row_dict[SHORT_TITLE] = row_dict[SHORT_TITLE].replace('\n', '').replace('    ', '').replace(
+                #     '\r', '').replace('\u2014\u0080\u0094', ' ').replace('\u00a0', ',').replace('$', 'AUD ')
                 row_dict = self._convert_to_datetime(row_dict)
                 self._bills_data.append(row_dict)
             except Exception as e:
                 print("Bad data", e, ' - ', row_dict[SHORT_TITLE])
+                raise e
 
     def _get_row_data(self, tds):
         row_data = []
@@ -78,7 +89,7 @@ class All_Bills(object):
             except Exception as e:
                 print(e)
                 row_data.append("")
-        return(row_data)
+        return row_data
 
     def _convert_to_datetime(self, bill_dict):
         bill_year = self.this_year
@@ -90,7 +101,7 @@ class All_Bills(object):
                     tempdate = indate.split('/')
                     outdate = datetime.date(
                         bill_year, int(tempdate[1]), int(tempdate[0]))
-            return(outdate)
+            return outdate
 
         for i in range(6):
             year = self.this_year - i
@@ -105,97 +116,95 @@ class All_Bills(object):
             bill_dict[stage] = to_datetime(bill_dict[stage])
 
         if bill_dict[CHAMBER] == self.chambers[0]:
-            for i in range(len(house_stages)-1):
-                if bill_dict[house_stages[i]] is not None and bill_dict[house_stages[i+1]] is not None:
-                    if bill_dict[house_stages[i]] > bill_dict[house_stages[i+1]]:
-                        d = bill_dict[house_stages[i+1]]
-                        bill_dict[house_stages[i+1]] = datetime.date(d.year+1, d.month, d.day)
+            for i in range(len(house_stages) - 1):
+                if bill_dict[house_stages[i]] is not None and bill_dict[house_stages[i + 1]] is not None:
+                    if bill_dict[house_stages[i]] > bill_dict[house_stages[i + 1]]:
+                        d = bill_dict[house_stages[i + 1]]
+                        bill_dict[house_stages[i + 1]] = datetime.date(d.year + 1, d.month, d.day)
         elif bill_dict[CHAMBER] == self.chambers[1]:
-            for i in range(len(senate_stages)-1):
-                if bill_dict[senate_stages[i]] is not None and bill_dict[senate_stages[i+1]] is not None:
-                    if bill_dict[senate_stages[i]] > bill_dict[senate_stages[i+1]]:
-                        d = bill_dict[senate_stages[i+1]]
-                        bill_dict[senate_stages[i+1]] = datetime.date(d.year+1, d.month, d.day)
+            for i in range(len(senate_stages) - 1):
+                if bill_dict[senate_stages[i]] is not None and bill_dict[senate_stages[i + 1]] is not None:
+                    if bill_dict[senate_stages[i]] > bill_dict[senate_stages[i + 1]]:
+                        d = bill_dict[senate_stages[i + 1]]
+                        bill_dict[senate_stages[i + 1]] = datetime.date(d.year + 1, d.month, d.day)
 
-        return(bill_dict)
+        return bill_dict
 
     @property
     def data(self):
-        return(self._bills_data)
+        return self._bills_data
 
 
-all_bills = All_Bills().data
+_all_bills_global = None
 
 
-class Bill(object):
-    _all_bills = all_bills
+def get_all_bills():
+    global _all_bills_global
+    if _all_bills_global is None:
+        _all_bills_global = AllBills().data
+    return _all_bills_global
 
-    def __init__(self, input, date_format="YYYY-MM-DD"):
-        self.date_format = date_format
-        if isinstance(input, dict):
+
+class Bill:
+    _bill_data = dict()
+
+    def __init__(self, bill_dict: dict = None, bill_url: str = None, bill_id: str = None, date_format="YYYY-MM-DD"):
+        if all(i is None for i in {bill_id, bill_url, bill_dict}):
+            raise ValueError("At least one of the arguments [bill_dict, bill_url, bill_id] must be provided.")
+
+        initial_data = bill_dict
+        if initial_data is None:
             try:
-                self.create_vars(input)
-                self.date_to_string()
+                # loop through all bills, if we something matches between the bill's URL or ID and the provided URL or
+                # ID, then we have a match. We only care about the first one we find.
+                bill = next(filter(
+                    lambda b: b is not None,
+                    (b if len({b[URL], b[ID]} & {bill_id, bill_url}) != 0 else None for b in get_all_bills())
+                ), None)
             except Exception as e:
-                raise Exception('Dict must have the correct keys. Missing key '
-                                + str(e))
-        elif isinstance(input, str):
-            t_data = False
-            for bill in self._all_bills:
-                if input == bill[URL] or input == bill[ID]:
-                    t_data = bill
-            if t_data:
-                self.create_vars(t_data)
-                self.date_to_string()
-            else:
-                raise TypeError('Must be a valid url string')
-        else:
-            raise TypeError('Must be a dict of the correct format OR a valid url string. See docs.')
+                log.error(f"Exception finding a matching bill. Exception: {e}")
+                raise e
+            if bill is None:
+                err_source = f'URL: {bill_url}' if bill_url is not None else f'ID: {bill_id}'
+                raise ValueError(f"Could not find bill matching {err_source}")
+            initial_data = bill
 
-    def create_vars(self, initial_data):
-        self._bill_data = initial_data
-        self.url = initial_data[URL]
-        self.chamber = initial_data[CHAMBER]
-        self.short_title = initial_data[SHORT_TITLE]
-        self.intro_house = initial_data[INTRO_HOUSE]
-        self.passed_house = initial_data[PASSED_HOUSE]
-        self.intro_senate = initial_data[INTRO_SENATE]
-        self.passed_house = initial_data[PASSED_SENATE]
-        self.assent_date = initial_data[ASSENT_DATE]
-        self.act_no = initial_data[ACT_NO]
-        self.bill_url = requests.get(self.url).text
-        self.bill_soup = BeautifulSoup(self.bill_url, 'lxml')
+        try:
+            self._bill_data = dict(**initial_data)
+            self.url = initial_data[URL]
+            self.chamber = initial_data[CHAMBER]
+            self.short_title = initial_data[SHORT_TITLE]
+            self.intro_house = initial_data[INTRO_HOUSE]
+            self.passed_house = initial_data[PASSED_HOUSE]
+            self.intro_senate = initial_data[INTRO_SENATE]
+            self.passed_house = initial_data[PASSED_SENATE]
+            self.assent_date = initial_data[ASSENT_DATE]
+            self.act_no = initial_data[ACT_NO]
+            self.bill_url = requests.get(self.url).text
+            self.bill_soup = BeautifulSoup(self.bill_url, 'lxml')
+            # date stuff
+            self.date_format = date_format
+            house_stages = [INTRO_HOUSE, PASSED_HOUSE,
+                            INTRO_SENATE, PASSED_SENATE, ASSENT_DATE]
+            for stage in house_stages:
+                self._bill_data[stage] = self._format_date(self._bill_data[stage])
+        except KeyError as e:
+            raise KeyError('(class Bill) bill_dict must have all keys. KeyError: ' + str(e))
 
-    def date_to_string(self):
-        house_stages = [INTRO_HOUSE, PASSED_HOUSE,
-                        INTRO_SENATE, PASSED_SENATE, ASSENT_DATE]
-        for stage in house_stages:
-            self._bill_data[stage] = self._format_date(self._bill_data[stage])
-
-    def _format_date(self, indate):
+    def _format_date(self, in_date):
         template = self.date_format
-        if indate is not None and not isinstance(indate, str):
-            if indate.month < 10 and indate.day < 10:
-                outdate = template.replace(
-                    "YYYY", str(indate.year)).replace("MM", '0' + str(indate.month)).replace("DD", '0' + str(indate.day))
-            elif indate.month < 10:
-                outdate = template.replace(
-                    "YYYY", str(indate.year)).replace("MM", '0' + str(indate.month)).replace("DD", str(indate.day))
-            elif indate.day < 10:
-                outdate = template.replace(
-                    "YYYY", str(indate.year)).replace("MM", str(indate.month)).replace("DD", '0' + str(indate.day))
-            else:
-                outdate = template.replace(
-                    "YYYY", str(indate.year)).replace("MM", str(indate.month)).replace("DD", str(indate.day))
+        if in_date is not None and not isinstance(in_date, str):
+            out_date = template.replace("YYYY", str(in_date.year))\
+                .replace("MM", f"{in_date.month:02d}").replace("DD", f"{in_date.day:02d}")
         else:
-            outdate = ''
-        return outdate
+            out_date = ''
+        return out_date
 
     def __str__(self):
-        return(self.short_title)
+        return f"<Bill | URL: '{self.url}'>"
 
     def __repr__(self):
-        return('<{}.{} : {} object at {}>'.format(
+        return ('<{}.{} : {} object at {}>'.format(
             self.__class__.__module__,
             self.__class__.__name__,
             self.url.split('=')[-1],
@@ -203,23 +212,23 @@ class Bill(object):
 
     @property
     def summary(self):
-        return(self.get_bill_summary())
+        return self.get_bill_summary()
 
     @property
     def sponsor(self):
-        return(self.get_sponsor())
+        return self.get_sponsor()
 
     @property
     def portfolio(self):
-        return(self.get_portfolio())
+        return self.get_portfolio()
 
     @property
     def bill_text_links(self):
-        return(self.get_bill_text_links())
+        return self.get_bill_text_links()
 
     @property
     def explanatory_memoranda_links(self):
-        return(self.get_bill_em_links())
+        return self.get_bill_em_links()
 
     def get_bill_summary(self):
         try:
@@ -229,11 +238,12 @@ class Bill(object):
         if div:
             for span_tag in div.find_all('span'):
                 span_tag.unwrap()
+            return div.p.text
             summary = div.p.text.replace('\n', '').replace('    ', '').replace(
                 '\r', '').replace('\u2014\u0080\u0094', ' ').replace('\u00a0', ',').replace('$', 'AUD ')
         else:
             summary = ""
-        return(summary)
+        return summary
 
     def get_bill_text_links(self):
         empyt_link_dict = {DOC: '',
@@ -244,16 +254,19 @@ class Bill(object):
         for code_n in range(3):
             try:
                 tr = self.bill_soup.find(
-                    "tr", id=tr_code+str(code_n))
+                    "tr", id=tr_code + str(code_n))
+                if tr is None:
+                    continue
                 links = []
-                for a in tr.find_all('td')[1].find_all('a'):
+                cells: ResultSet = tr.find_all('td')
+                for a in cells[1].find_all('a') if len(cells) > 1 else list():
                     links.append(a['href'])
-                links_dict = {DOC: links[0],
-                              PDF: links[1],
-                              HTML: links[2]}
-                all_texts.append(links_dict)
+                if len(links) >= 3:
+                    all_texts.append({DOC: links[0],
+                                      PDF: links[1],
+                                      HTML: links[2]})
             except Exception as e:
-                links_dict = empyt_link_dict.copy()
+                log.warning(f"Exception during get_bill_text_links: {e}")
         reading_dict = {
             'first': empyt_link_dict.copy(),
             'third': empyt_link_dict.copy(),
@@ -264,35 +277,38 @@ class Bill(object):
             for typ in reading_dict.keys():
                 if typ in text[PDF]:
                     reading_dict[typ] = text
-        return(reading_dict)
+        return reading_dict
 
-    def get_bill_em_links(self):
-        try:
-            tr = self.bill_soup.find(
-                "tr", id='main_0_explanatoryMemorandaControl_readingItemRepeater_trFirstReading1_0')
-            links = []
-            for a in tr.find_all('td')[1].find_all('a'):
-                links.append(a['href'])
-            links_dict = {DOC: links[0],
-                          PDF: links[1],
-                          HTML: links[2]}
-            return(links_dict)
-        except Exception as e:
-            return({})
+    def get_bill_em_links(self) -> dict:
+        tr = self.bill_soup.find(
+            "tr", id='main_0_explanatoryMemorandaControl_readingItemRepeater_trFirstReading1_0')
+        if tr is None:
+            return dict()
+        links = list(tr.find_all('td')[1].find_all('a'))
+        return {DOC: links[0],
+                PDF: links[1],
+                HTML: links[2]}
 
-    def get_sponsor(self):
+    def get_sponsor(self) -> Maybe[str]:
         try:
             tr = self.bill_soup.find("div", id='main_0_billSummary_sponsorPanel')
-            return(tr.find_all('dd')[0].text.replace('  ', '').replace('\n', '').replace('\r', ''))
+            if tr is None:
+                return ''
+            return Just(tr.find('dd').text).value
+            # return tr.find_all('dd')[0].text.replace('  ', '').replace('\n', '').replace('\r', '')
         except Exception as e:
-            return('')
+            log.warning(e)
+            return ''
+            
 
-    def get_portfolio(self):
+    def get_portfolio(self) -> Maybe[str]:
         try:
             tr = self.bill_soup.find("div", id='main_0_billSummary_portfolioPanel')
-            return(tr.find_all('dd')[0].text.replace('  ', '').replace('\n', '').replace('\r', ''))
+            return '' if tr is None else Just(tr.find_all('dd')[0].text).value
+            # return tr.find_all('dd')[0].text.replace('  ', '').replace('\n', '').replace('\r', '')
         except Exception as e:
-            return('')
+            log.warning(e)
+            return ''
 
     @property
     def data(self):
@@ -308,5 +324,7 @@ class Bill(object):
                     self._bill_data[TEXT_LINK + '_' + TEXT] = self.bill_text_links[reading][TEXT]
                     self._bill_data[CURRENT_READING] = reading
             self._bill_data[EM_LINK + '_' + TEXT] = self.explanatory_memoranda_links[TEXT]
+        return self._bill_data
 
-        return(self._bill_data)
+    def to_json(self) -> str:
+        return json.dumps(self._bill_data, cls=AusBillsJsonEncoder)

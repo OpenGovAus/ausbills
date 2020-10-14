@@ -9,6 +9,14 @@ URL = 'url'
 TITLE = 'title'
 DESCRIPTION = 'description'
 PRESENTED_BY = 'presented_by'
+TYPE = 'type'
+STATUS = 'status'
+TEXT_URL = 'text_url'
+SCRUTINY_REPORT = 'scrutiny_report'
+PRESENTATION_SPEECH = 'presentation_speech'
+HANSARD = 'hansard'
+EXPLANATORY_STATEMENT = 'explanatory_statement'
+COMPATIBILITY_STATEMENT = 'compatibility_statement'
 
 ninth_assembly_bills = "https://www.parliament.act.gov.au/parliamentary-business/in-the-chamber/bills/summary_of_bills"
 ninth_assembly_bills_meta = "https://www.parliament.act.gov.au/parliamentary-business/in-the-chamber/bills/bills_volume"
@@ -156,6 +164,7 @@ class act_Bill(object):
         else:
             raise TypeError('Input must be valid dict data.')
     
+    
     def create_vars(self, init_data):
         self._bill_data = init_data
         self.url = init_data[URL]
@@ -163,3 +172,110 @@ class act_Bill(object):
         self.title = init_data[TITLE]
         self.description = init_data[DESCRIPTION]
         self.presented_by = init_data[PRESENTED_BY]
+        try:
+            self.bill_soup = BeautifulSoup(requests.get(self.url).text, 'lxml')
+        except:
+            raise Exception('Invalid bill URL, unable to scrape. ' + self.url)
+
+    @property
+    def bill_type(self):
+        return(self.get_bill_type())
+
+    def get_bill_type(self):
+        basic_data = self.bill_soup.find('dl')
+        try:
+            _billtype = basic_data.find_all('dd')
+        except:
+            raise Exception('Please submit an issue with this data:\nBill URL couldn\'t be scraped: ' + self.url)
+        return(_billtype[0].text)
+
+    @property
+    def status(self):
+        return(self.get_bill_status())
+
+    def get_bill_status(self):
+        basic_data = self.bill_soup.find('dl')
+        _billtype = basic_data.find_all('dd')
+        return(_billtype[2].text)
+
+    @property
+    def bill_text_url(self):
+        return(self.get_bill_text())
+
+    def get_bill_text(self):
+        a = self.bill_soup.find('a', {'class', 'button viewable pdf'})
+        return('https://www.legislation.act.gov.au' + a['href'])
+    
+    @property
+    def scrutiny_report(self):
+        return(self.get_scrutiny_report())
+
+    def get_scrutiny_report(self):
+        table = self.bill_soup.find('table', {'class': 'datatable display'})
+        td = table.find('td', {'class': 'notes'})
+        for a in td.find_all('a'):
+            if(not ' Scrutiny Committee' in a.text and 'Scrutiny Committee' in a.text):
+                scrutiny_url = a['href']
+        try:
+            return(scrutiny_url)
+        except:
+            return('')
+
+    @property
+    def presentation_speech(self):
+        table = self.bill_soup.find('table', {'class': 'datatable display'})
+        td = table.find('td', {'class': 'notes'})
+        for a in td.find_all('a'):
+            if('Presentation speech' in a.text):
+                speech_url = a['href']
+        try:
+            return(speech_url)
+        except:
+            return('')
+
+    @property
+    def hansard(self):
+        table = self.bill_soup.find('table', {'class': 'datatable display'})
+        td = table.find('td', {'class': 'notes'})
+        for a in td.find_all('a'):
+            if('Hansard debate' in a.text):
+                hansard_url = a['href']
+        try:
+            return(hansard_url)
+        except:
+            return('')
+
+    @property
+    def explanatory_statement(self):
+        table = self.bill_soup.find_all('table', {'class': 'datatable display'})[1]
+        a = table.find('a')
+        try:
+            return('https://www.legislation.act.gov.au' + a['href'])
+        except:
+            return('')
+
+    @property
+    def compatibility_statement(self):
+        table = self.bill_soup.find_all('table', {'class': 'datatable display'})[2]
+        a = table.find('a')
+        try:
+            return('https://www.legislation.act.gov.au' + a['href'])
+        except:
+            return('')
+
+    @property
+    def data(self):
+        self._bill_data[URL] = self.url
+        self._bill_data[TITLE] = self.title
+        self._bill_data[DATE] = self.date
+        self._bill_data[DESCRIPTION] = self.description
+        self._bill_data[PRESENTED_BY] = self.presented_by
+        self._bill_data[TYPE] = self.bill_type
+        self._bill_data[STATUS] = self.status
+        self._bill_data[TEXT_URL] = self.bill_text_url
+        self._bill_data[SCRUTINY_REPORT] = self.scrutiny_report
+        self._bill_data[PRESENTATION_SPEECH] = self.presentation_speech
+        self._bill_data[HANSARD] = self.hansard
+        self._bill_data[EXPLANATORY_STATEMENT] = self.explanatory_statement
+        self._bill_data[COMPATIBILITY_STATEMENT] = self.compatibility_statement
+        return(self._bill_data)
