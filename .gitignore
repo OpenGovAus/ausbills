@@ -7,3 +7,7 @@ wa_bills_out_*
 __pycache__
 wa_bills_out
 bill_data.json
+/bin
+/env
+/lib64
+pyvenv.cfg
