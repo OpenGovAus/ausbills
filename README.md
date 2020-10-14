@@ -21,7 +21,8 @@ This module had methods for scraping the [Australian Federal Parliament](https:/
 The bills are scraped to get data from both the house and the senate:
 
 ```python
-from ausbills.federal_parliment import all_bills, Bill
+from ausbills.federal_parliment import get_all_bills, Bill
+all_bills = get_all_bills()
 print(all_bills)
 bill_five = all_bills[5]
 ```
