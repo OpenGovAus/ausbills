@@ -25,6 +25,8 @@ jobs:
       - run:
           command: |
             pip install -r requirements.txt
+      - run:
+          command: |
             python -m pytest -s
   deploy:
     docker:
