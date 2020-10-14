@@ -63,6 +63,26 @@ bill.data
 
 ---
 
+## ACT Legislative Assembly
+
+This module allows you to scrape bill data from the [Australian Capital Territory Legislative Assembly](https://www.parliament.act.gov.au/parliamentary-business/in-the-chamber/bills/summary_of_bills) website using _beautiful soup_.
+
+Similarly to the Federal Parliament and WA modules, you can scrape all the bills like this:
+
+```python
+from act_legislative_assembly import act_all_bills as all_bills
+
+print(all_bills)
+print('The 5th Bill is ' + all_bills[4])
+```
+
+You can interact with individual bills with the **act_Bill()** object:
+```python
+all_the_bills = all_bills
+some_bill = act_Bill(all_the_bills[5])
+print(some_bill.title)
+```
+
 ## Contributing
 
 We use **BeautifulSoup** to scrape the bills from the Bills websites. so make sure you become familiar with the docs [here](https://www.crummy.com/software/BeautifulSoup/bs4/doc/).
@@ -112,6 +132,3 @@ Unfortunately, the ACT Government stores these bill lists as PDF files that don'
 - Get bill metadata from https://www.parliament.act.gov.au/parliamentary-business/in-the-chamber/previous-assemblies/business6/ + appended volume ID
 
 The volume ID differs from Assembly to Assembly and doesn't follow a pattern, but are unlikely to change since different parliamentary sites pull data from these lists, so it's 99% safe to hard-code the URLs, and would be very easy to change should the host files change.
-
-#### Return Bills:
-- Add ```Bill``` class

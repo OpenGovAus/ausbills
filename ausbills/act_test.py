@@ -1,6 +1,13 @@
-import io
-from act_legislative_assembly import act_all_bills as all_bills
+import random
+from act_legislative_assembly import act_all_bills as all_bills, act_Bill as Bill
 
-f = open("9th_assembly_demo.txt", "w")
-for bill in range(len(all_bills)):
-    f.write(all_bills[bill]['title'] + " - " + all_bills[bill]['date'] + "\n" + "Presented by " + all_bills[bill]['presented_by'] + "\n" + all_bills[bill]['description'] + '\n\n')
+all_the_bills_mate = all_bills
+print('Found ' + str(len(all_the_bills_mate)) + ' bills.')
+rand = [int(random.random()*len(all_the_bills_mate)) for i in range(5)]
+
+for num in rand:
+    the_current_bill_mate = Bill(all_the_bills_mate[num])
+    print(the_current_bill_mate.title + ':')
+    print(the_current_bill_mate.url)
+    print('Presented by ' + the_current_bill_mate.presented_by + ' on ' + the_current_bill_mate.date)
+    print(the_current_bill_mate.description + '\n\n')

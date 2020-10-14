@@ -143,5 +143,23 @@ class All_Bills(object):
 
 act_all_bills = All_Bills().data
 
-class Bill(object):
+class act_Bill(object):
     _all_bills = act_all_bills
+
+    def __init__(self, input):
+        if(isinstance(input, dict)):
+            try:
+                self.create_vars(input)
+            except Exception as e:
+                raise Exception('Dict must have the correct keys. Missing key '
+                                + str(e))
+        else:
+            raise TypeError('Input must be valid dict data.')
+    
+    def create_vars(self, init_data):
+        self._bill_data = init_data
+        self.url = init_data[URL]
+        self.date = init_data[DATE]
+        self.title = init_data[TITLE]
+        self.description = init_data[DESCRIPTION]
+        self.presented_by = init_data[PRESENTED_BY]
