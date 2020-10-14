@@ -293,20 +293,21 @@ class Bill:
         try:
             tr = self.bill_soup.find("div", id='main_0_billSummary_sponsorPanel')
             if tr is None:
-                return Nothing
-            return Just(tr.find('dd').text)
+                return ''
+            return Just(tr.find('dd').text).value
             # return tr.find_all('dd')[0].text.replace('  ', '').replace('\n', '').replace('\r', '')
         except Exception as e:
-            raise e
+            log.warning(e)
             return ''
+            
 
     def get_portfolio(self) -> Maybe[str]:
         try:
             tr = self.bill_soup.find("div", id='main_0_billSummary_portfolioPanel')
-            return Nothing if tr is None else Just(tr.find_all('dd')[0].text)
+            return '' if tr is None else Just(tr.find_all('dd')[0].text).value
             # return tr.find_all('dd')[0].text.replace('  ', '').replace('\n', '').replace('\r', '')
         except Exception as e:
-            raise e
+            log.warning(e)
             return ''
 
     @property
