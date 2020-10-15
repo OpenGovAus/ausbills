@@ -295,8 +295,8 @@ class Bill:
             tr = self.bill_soup.find("div", id='main_0_billSummary_sponsorPanel')
             if tr is None:
                 return ''
-            return Just(tr.find('dd').text).value
-            # return tr.find_all('dd')[0].text.replace('  ', '').replace('\n', '').replace('\r', '')
+            # return Just(tr.find('dd').text).value
+            return tr.find_all('dd')[0].text.replace('  ', '').replace('\n', '').replace('\r', '')
         except Exception as e:
             log.warning(e)
             return ''
