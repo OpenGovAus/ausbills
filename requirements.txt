@@ -6,6 +6,6 @@ twine==3.2.0
 pytest==6.1.1
 six~=1.15.0
 DateTime~=4.3
-setuptools~=50.3.0
+setuptools~=50.3.1
 python-slugify==4.0.1
 urlpath==1.1.7
