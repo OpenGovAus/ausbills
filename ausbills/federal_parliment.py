@@ -171,6 +171,7 @@ class Bill:
 
         try:
             self._bill_data = dict(**initial_data)
+            self._bill_data_original = dict(**initial_data).copy()
             self.url = initial_data[URL]
             self.chamber = initial_data[CHAMBER]
             self.short_title = initial_data[SHORT_TITLE]
@@ -187,7 +188,7 @@ class Bill:
             house_stages = [INTRO_HOUSE, PASSED_HOUSE,
                             INTRO_SENATE, PASSED_SENATE, ASSENT_DATE]
             for stage in house_stages:
-                self._bill_data[stage] = self._format_date(self._bill_data[stage])
+                self._bill_data[stage] = self._format_date(self._bill_data_original[stage])
         except KeyError as e:
             raise KeyError('(class Bill) bill_dict must have all keys. KeyError: ' + str(e))
 

@@ -30,7 +30,7 @@ bill_five = all_bills[5]
 `all_bills.data` is a list of all current bills and some basic data in the form of a dict. The rest of the data may be obtained via the **Bill()** object.
 
 ```python
-bill = Bill(bill_five)
+bill = Bill(bill_id=bill_five["id"])
 print(bill.summary)
 print(bill.sponsor)
 print(bill.bill_text_links)
