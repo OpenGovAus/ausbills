@@ -1,7 +1,7 @@
 from requests import get
 import json
 
-bill_list_url = 'https://www.legislation.qld.gov.au/projectdata?ds=OQPC-BrowseDataSource&start=1&count=99999&sortField=sort.title&sortDirection=asc&filterField=TitleWord&expression=Repealed=N%20AND%20PrintType=(%22bill.first%22%20OR%20%22bill.firstnongovintro%22)%20AND%20Title='
+bill_list_url = 'https://www.legislation.qld.gov.au/projectdata?ds=OQPC-BrowseDataSource&start=1&count=9999&sortField=sort.title&sortDirection=asc&expression=Repealed%3DN+AND+PrintType%3D(%22bill.first%22+OR+%22bill.firstnongovintro%22)+AND+Title%3Da%20OR%20b%3F&subset=browse&collection=&_=1602801890379'
 
 class qld_All_Bills(object):
     _bills_data = []
@@ -13,7 +13,14 @@ class qld_All_Bills(object):
             raise Exception('Error when scraping lists...')
 
     def _create_dataset(self):
-        for number in range(26):
-            alpha = chr(97 + number)
-            data = json.loads(get(bill_list_url + str(alpha) + '?&subset=browse&collection=&_=1602753113638').text)
-            print(data)
+        data = json.loads(get(bill_list_url).text)
+        _bills_data = data
+        for bill in range(len(data['data'])):
+            if 'bill-' in data['data'][bill]['id']['__value__']:
+                print('https://www.legislation.qld.gov.au/view/html/bill.first/' + data['data'][bill]['id']['__value__'])
+
+    @property
+    def data(self):
+        return(self._bills_data)
+
+qld_all_bills = qld_All_Bills().data
