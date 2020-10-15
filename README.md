@@ -64,6 +64,29 @@ bill.data
 
 ---
 
+## NSW Government
+
+Using the ```nsw_parliament``` module, you can scrape bills from the [NSW Parliament website](https://www.parliament.nsw.gov.au/bills/pages/all-bills-1997.aspx)
+
+Use ```nsw_all_bills``` to return a list of bill dicts (each dict represents an individual bill).
+```python
+from nsw_parliament import nsw_all_bills
+
+print(nsw_all_bills)
+print('The first bill returned: ' + nsw_all_bills[0])
+```
+
+You can return more data on an individual bill using the **nsw_Bill** object:
+
+```python
+from nsw_parliament import nsw_all_bills, nsw_Bill
+
+all_the_bills_mate = nsw_all_bills
+print(nsw_Bill(all_the_bills_mate).status)
+```
+
+---
+
 ## ACT Legislative Assembly
 
 This module allows you to scrape bill data from the [Australian Capital Territory Legislative Assembly](https://www.parliament.act.gov.au/parliamentary-business/in-the-chamber/bills/summary_of_bills) website using _beautiful soup_.
