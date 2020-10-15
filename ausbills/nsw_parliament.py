@@ -15,7 +15,7 @@ CARRIAGE_MEMBER = 'carriage_member'
 LONG_TITLE = 'long_title'
 BILL_TEXT = 'text'
 
-base_url = 'https://www.parliament.nsw.gov.au/bills/pages/all-bills-1997.aspx?letter='
+base_url = 'https://www.parliament.nsw.gov.au/bills/pages/all-bills-1997.aspx?session=0'
 
 class nsw_All_Bills(object):
     _bills_data = []
@@ -27,19 +27,17 @@ class nsw_All_Bills(object):
         _bill_origin = []
         _bill_urls = []
 
-        for number in range(26):
-            alpha = chr(65 + number)
-            soup = BeautifulSoup(get(base_url + alpha).text, 'lxml')
-            table = soup.find('table', {'id': 'prlMembers'})
-            rows = table.find_all('tr')
-            rows.pop(0)
-            for row in rows:
-                _bill_titles.append(row.find_all('td')[0].text[5:-3])
-                _bill_origin.append(row.find_all('td')[1].text[1:].replace('LA', 'Legislative Assembly').replace('LC', 'Legislative Council'))
-                try:
-                    _bill_urls.append(('https://www.parliament.nsw.gov.au' + row.find('a', {'class': 'prl-name-link'})['href']))
-                except:
-                    _bill_urls.append('')
+        soup = BeautifulSoup(get(base_url).text, 'lxml')
+        table = soup.find('table', {'id': 'prlMembers'})
+        rows = table.find_all('tr')
+        rows.pop(0)
+        for row in rows:
+            _bill_titles.append(row.find_all('td')[0].text[5:-3])
+            _bill_origin.append(row.find_all('td')[1].text[1:].replace('LA', 'Legislative Assembly').replace('LC', 'Legislative Council'))
+            try:
+                _bill_urls.append(('https://www.parliament.nsw.gov.au' + row.find('a', {'class': 'prl-name-link'})['href']))
+            except:
+                _bill_urls.append('')
         for bill in range(len(_bill_titles)):
             _bill_dict = {TITLE: _bill_titles[bill], URL: _bill_urls[bill], ORIGIN: _bill_origin[bill]}
             self._bills_data.append(_bill_dict)
