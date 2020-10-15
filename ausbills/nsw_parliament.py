@@ -63,7 +63,8 @@ class nsw_Bill(object):
             self.url = initial_data[URL]
             self.title = initial_data[TITLE]
             self.origin = initial_data[ORIGIN]
-            self.bill_soup = BeautifulSoup(get(self.url).text, 'lxml')
+            self.page_data = get(self.url).text
+            self.bill_soup = BeautifulSoup(self.page_data, 'lxml')
         except KeyError as e:
             raise KeyError('Dict must have correct keys, missing key ' + e)
     
