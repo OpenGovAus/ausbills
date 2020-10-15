@@ -11,6 +11,7 @@ pip install ausbills
 Current governments that are supported:
 
 - Australian Federal Government
+- Australian Capital Territory Government
 
 ---
 
@@ -82,6 +83,28 @@ from nsw_parliament import nsw_all_bills, nsw_Bill
 
 all_the_bills_mate = nsw_all_bills
 print(nsw_Bill(all_the_bills_mate).status)
+```
+
+---
+
+## ACT Legislative Assembly
+
+This module allows you to scrape bill data from the [Australian Capital Territory Legislative Assembly](https://www.parliament.act.gov.au/parliamentary-business/in-the-chamber/bills/summary_of_bills) website using _beautiful soup_.
+
+Similarly to the Federal Parliament and WA modules, you can scrape all the bills like this:
+
+```python
+from act_legislative_assembly import act_all_bills as all_bills
+
+print(all_bills)
+print('The 5th Bill is ' + all_bills[4])
+```
+
+You can interact with individual bills with the **act_Bill()** object:
+```python
+all_the_bills = all_bills
+some_bill = act_Bill(all_the_bills[5])
+print(some_bill.title)
 ```
 
 ---
