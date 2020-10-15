@@ -171,6 +171,7 @@ class Bill:
 
         try:
             self._bill_data = dict(**initial_data)
+            self._bill_data_original = dict(**initial_data).copy()
             self.url = initial_data[URL]
             self.chamber = initial_data[CHAMBER]
             self.short_title = initial_data[SHORT_TITLE]
@@ -187,7 +188,7 @@ class Bill:
             house_stages = [INTRO_HOUSE, PASSED_HOUSE,
                             INTRO_SENATE, PASSED_SENATE, ASSENT_DATE]
             for stage in house_stages:
-                self._bill_data[stage] = self._format_date(self._bill_data[stage])
+                self._bill_data[stage] = self._format_date(self._bill_data_original[stage])
         except KeyError as e:
             raise KeyError('(class Bill) bill_dict must have all keys. KeyError: ' + str(e))
 
@@ -294,8 +295,8 @@ class Bill:
             tr = self.bill_soup.find("div", id='main_0_billSummary_sponsorPanel')
             if tr is None:
                 return ''
-            return Just(tr.find('dd').text).value
-            # return tr.find_all('dd')[0].text.replace('  ', '').replace('\n', '').replace('\r', '')
+            # return Just(tr.find('dd').text).value
+            return tr.find_all('dd')[0].text.replace('  ', '').replace('\n', '').replace('\r', '')
         except Exception as e:
             log.warning(e)
             return ''
@@ -304,8 +305,8 @@ class Bill:
     def get_portfolio(self) -> Maybe[str]:
         try:
             tr = self.bill_soup.find("div", id='main_0_billSummary_portfolioPanel')
-            return '' if tr is None else Just(tr.find_all('dd')[0].text).value
-            # return tr.find_all('dd')[0].text.replace('  ', '').replace('\n', '').replace('\r', '')
+            # return '' if tr is None else Just(tr.find_all('dd')[0].text).value
+            return tr.find_all('dd')[0].text.replace('  ', '').replace('\n', '').replace('\r', '')
         except Exception as e:
             log.warning(e)
             return ''
