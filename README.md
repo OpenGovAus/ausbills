@@ -12,6 +12,7 @@ Current governments that are supported:
 
 - Australian Federal Government
 - Australian Capital Territory Government
+- New South Wales Government
 
 ---
 
@@ -82,6 +83,17 @@ You can interact with individual bills with the **act_Bill()** object:
 all_the_bills = all_bills
 some_bill = act_Bill(all_the_bills[5])
 print(some_bill.title)
+```
+
+## New South Wales Parliament
+
+This module allows you to scrape bill data from the [NSW Parliament website](https://www.parliament.nsw.gov.au/bills/pages/all-bills-1997.aspx) website using _beautiful soup_.
+
+Examples:
+```python
+from nsw_parliament import nsw_all_bills
+
+print(nsw_all_bills[0][TITLE])
 ```
 
 ## Contributing
