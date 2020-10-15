@@ -31,7 +31,7 @@ bill_five = all_bills[5]
 `all_bills.data` is a list of all current bills and some basic data in the form of a dict. The rest of the data may be obtained via the **Bill()** object.
 
 ```python
-bill = Bill(bill_five)
+bill = Bill(bill_id=bill_five["id"])
 print(bill.summary)
 print(bill.sponsor)
 print(bill.bill_text_links)
@@ -60,6 +60,29 @@ and you can get the data dump as a dict:
 
 ```python
 bill.data
+```
+
+---
+
+## NSW Government
+
+Using the ```nsw_parliament``` module, you can scrape bills from the [NSW Parliament website](https://www.parliament.nsw.gov.au/bills/pages/all-bills-1997.aspx)
+
+Use ```nsw_all_bills``` to return a list of bill dicts (each dict represents an individual bill).
+```python
+from nsw_parliament import nsw_all_bills
+
+print(nsw_all_bills)
+print('The first bill returned: ' + nsw_all_bills[0])
+```
+
+You can return more data on an individual bill using the **nsw_Bill** object:
+
+```python
+from nsw_parliament import nsw_all_bills, nsw_Bill
+
+all_the_bills_mate = nsw_all_bills
+print(nsw_Bill(all_the_bills_mate).status)
 ```
 
 ---
