@@ -84,6 +84,8 @@ some_bill = act_Bill(all_the_bills[5])
 print(some_bill.title)
 ```
 
+---
+
 ## Contributing
 
 We use **BeautifulSoup** to scrape the bills from the Bills websites. so make sure you become familiar with the docs [here](https://www.crummy.com/software/BeautifulSoup/bs4/doc/).

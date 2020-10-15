@@ -19,9 +19,7 @@ EXPLANATORY_STATEMENT = 'explanatory_statement'
 COMPATIBILITY_STATEMENT = 'compatibility_statement'
 
 ninth_assembly_bills = "https://www.parliament.act.gov.au/parliamentary-business/in-the-chamber/bills/summary_of_bills"
-ninth_assembly_bills_meta = "https://www.parliament.act.gov.au/parliamentary-business/in-the-chamber/bills/bills_volume"
 eighth_assembly_bills = "https://www.parliament.act.gov.au/parliamentary-business/in-the-chamber/previous-assemblies/eighth-assembly/summary_of_bills"
-eighth_assembly_bills_meta = "https://www.parliament.act.gov.au/parliamentary-business/in-the-chamber/previous-assemblies/eighth-assembly/bills_volume"
 ninth_siteData = requests.get(ninth_assembly_bills).text
 eighth_siteData = requests.get(eighth_assembly_bills).text
 
@@ -56,7 +54,6 @@ class All_Bills(object):
 
         billData = div.find_all(re.compile(r'(div|p)'))
         allStrong = div.find_all('strong')
-        dumbDebug = []
         for strong in range(len(allStrong)):
             if('This bill' in allStrong[strong].text or 'e bill will also' in allStrong[strong].text):
                 pass
@@ -70,7 +67,10 @@ class All_Bills(object):
             _bill_title = billTitles[title].text
             a = billTitles[title].find('a')
             if(a == None):
-                _bill_url = ''
+                if('Aboriginal and Torres Strait Islander Elected Body Amendment Bill 2020' in billTitles[title].text):
+                    _bill_url = 'https://www.legislation.act.gov.au/a/2020-36/'
+                else:
+                    _bill_url = ''
             else:
                 _bill_url = a['href']
             _bill_description = billDescs[title].text
@@ -175,7 +175,11 @@ class act_Bill(object):
         try:
             self.bill_soup = BeautifulSoup(requests.get(self.url).text, 'lxml')
         except:
-            raise Exception('Invalid bill URL, unable to scrape. ' + self.url)
+            if(self.url == 'file:///%5C%5Cact.gov.au%5Cassembly%5Clasec%5CChamber%5CLA%20Secretariat%20%231%5CNOTICEPAPER%5CBills%5CSummary%20of%20Bills%5CEighth%20Assembly%5CThis%20bill%20will%20establish%20the%20legislative%20framework%20for%20the%20operation%20of%20a%20secure%20mental%20health%20facility%20in%20the%20ACT'):
+                self.url = 'https://www.legislation.act.gov.au/a/2011-35/'
+                self.bill_soup = BeautifulSoup(requests.get(self.url).text, 'lxml')
+            else:
+                raise Exception('Invalid bill URL, unable to scrape. ' + self.url)
 
     @property
     def bill_type(self):
@@ -186,7 +190,7 @@ class act_Bill(object):
         try:
             _billtype = basic_data.find_all('dd')
         except:
-            raise Exception('Please submit an issue with this data:\nBill URL couldn\'t be scraped: ' + self.url)
+            return ''
         return(_billtype[0].text)
 
     @property
@@ -203,8 +207,11 @@ class act_Bill(object):
         return(self.get_bill_text())
 
     def get_bill_text(self):
-        a = self.bill_soup.find('a', {'class', 'button viewable pdf'})
-        return('https://www.legislation.act.gov.au' + a['href'])
+        try:
+            a = self.bill_soup.find('a', {'class', 'button viewable pdf'})
+            return('https://www.legislation.act.gov.au' + a['href'])
+        except:
+            return ''
     
     @property
     def scrutiny_report(self):
@@ -224,14 +231,17 @@ class act_Bill(object):
     @property
     def presentation_speech(self):
         table = self.bill_soup.find('table', {'class': 'datatable display'})
-        td = table.find('td', {'class': 'notes'})
-        for a in td.find_all('a'):
-            if('Presentation speech' in a.text):
-                speech_url = a['href']
         try:
-            return(speech_url)
+            td = table.find('td', {'class': 'notes'})
+            for a in td.find_all('a'):
+                if('Presentation speech' in a.text):
+                    speech_url = a['href']
+            try:
+                return(speech_url)
+            except:
+                return('')
         except:
-            return('')
+            return ''
 
     @property
     def hansard(self):
