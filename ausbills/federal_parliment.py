@@ -286,9 +286,9 @@ class Bill:
         if tr is None:
             return dict()
         links = list(tr.find_all('td')[1].find_all('a'))
-        return {DOC: links[0],
-                PDF: links[1],
-                HTML: links[2]}
+        return {DOC: links[0]['href'],
+                PDF: links[1]['href'],
+                HTML: links[2]['href']}
 
     def get_sponsor(self) -> Maybe[str]:
         try:
