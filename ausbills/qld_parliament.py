@@ -14,10 +14,14 @@ class qld_All_Bills(object):
 
     def _create_dataset(self):
         data = json.loads(get(bill_list_url).text)
-        _bills_data = data
+        _bill_urls = []
+        _bill_ids = []
+
         for bill in range(len(data['data'])):
-            if 'bill-' in data['data'][bill]['id']['__value__']:
-                print('https://www.legislation.qld.gov.au/view/html/bill.first/' + data['data'][bill]['id']['__value__'])
+            if(bill % 2 != 0):
+                if 'bill-' in data['data'][bill]['id']['__value__'] and not 'https://www.legislation.qld.gov.au/view/html/bill.first/' + data['data'][bill]['id']['__value__'] in _bill_urls:
+                    _bill_urls.append('https://www.legislation.qld.gov.au/view/html/bill.first/' + data['data'][bill]['id']['__value__'])
+                    _bill_ids.append(data['data'][bill]['id']['__value__'])
 
     @property
     def data(self):
