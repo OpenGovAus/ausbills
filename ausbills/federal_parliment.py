@@ -1,5 +1,6 @@
 import json
 
+
 from bs4 import BeautifulSoup, ResultSet
 import requests
 import datetime
