@@ -17,6 +17,11 @@ TITLE = 'title'
 BILL_NUMBER = 'bill_number'
 SERIES_ID = 'series_id' #  These 2 variables (series/desc)_id are used by the QLD bill API to deliver specific HTML fragments.
 DESC_ID = 'desc_id'     #  Without these, we'd need some funky JavaScript interpretation.
+EXPLANATORY_NOTE = 'explanatory_note'
+RENDITIONS = 'renditions'
+SPONSOR = 'sponsor'
+LONG_TITLE = 'long_title'
+BILL_TYPE = 'bill_type'
 
 class qld_All_Bills(object):
     _bills_data = []
@@ -136,3 +141,12 @@ class qld_Bill(object):
             return ''
         except:
             return ''
+    
+    @property
+    def data(self):
+        self._bill_data[EXPLANATORY_NOTE] = self.explanatory_note
+        self._bill_data[SPONSOR] = self.sponsor
+        self._bill_data[RENDITIONS] = self.renditions
+        self._bill_data[LONG_TITLE] = self.renditions
+        self._bill_data[BILL_TYPE] = self.bill_type
+        return(self._bill_data)
