@@ -1,5 +1,6 @@
 import json
 
+
 from bs4 import BeautifulSoup, ResultSet
 import requests
 import datetime
@@ -70,8 +71,8 @@ class AllBills(object):
                         " ", "_").replace(".", "")] = row_data[i]
                 row_dict[URL] = bill_url_string
                 row_dict[ID] = bill_url_string.split('?')[-1].split('=')[-1]
-                # row_dict[SHORT_TITLE] = row_dict[SHORT_TITLE].replace('\n', '').replace('    ', '').replace(
-                #     '\r', '').replace('\u2014\u0080\u0094', ' ').replace('\u00a0', ',').replace('$', 'AUD ')
+                row_dict[SHORT_TITLE] = row_dict[SHORT_TITLE].replace('\n', '').replace('    ', '').replace('\r', '').replace('\u00a0', ',').replace('$', 'AUD ').replace('ia\u2014', 'ia\'').replace('rans\u2014', 'rans\'').replace('\x80', '').replace('\x99', '').replace('\x94', '')
+                row_dict[SHORT_TITLE] = row_dict[SHORT_TITLE].replace('\u2014', '-')
                 row_dict = self._convert_to_datetime(row_dict)
                 self._bills_data.append(row_dict)
             except Exception as e:
