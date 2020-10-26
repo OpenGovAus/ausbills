@@ -1,0 +1,5 @@
+import json
+from requests import get
+from bs4 import BeautifulSoup
+
+api_url = 'https://www.legislation.vic.gov.au/app/api/search/title_content?from=0&size=9999&includeFilters[0][prefix][title_az]=&includeFilters[1][term][type]=bill&includeFields[0]=title&includeFields[1]=field_in_force_former_title&includeFields[2]=url&includeFields[3]=type&includeFields[4]=legislation_type&includeFields[5]=field_act_sr_number&includeFields[6]=legislation_year&includeFields[7]=field_act_sr_status_date&includeFields[8]=field_legislation_status&includeFields[9]=field_bill_pre_2004&includeFields[10]=field_bill_parliament_term&sort[0][_score]=desc&sort[1][title_az]=asc&aggregations[legislation_year][terms][field]=legislation_year&aggregations[legislation_year][terms][order][_key]=desc&aggregations[legislation_year][terms][size]=250&aggregations[field_legislation_status][terms][field]=field_legislation_status&aggregations[field_legislation_status][terms][order][_key]=asc&aggregations[field_legislation_status][terms][size]=250'
