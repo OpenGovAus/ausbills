@@ -70,7 +70,7 @@ Using the ```nsw_parliament``` module, you can scrape bills from the [NSW Parlia
 
 Use ```nsw_all_bills``` to return a list of bill dicts (each dict represents an individual bill).
 ```python
-from nsw_parliament import nsw_all_bills
+from ausbills.nsw_parliament import nsw_all_bills
 
 print(nsw_all_bills)
 print('The first bill returned: ' + nsw_all_bills[0])
@@ -79,7 +79,7 @@ print('The first bill returned: ' + nsw_all_bills[0])
 You can return more data on an individual bill using the **nsw_Bill** object:
 
 ```python
-from nsw_parliament import nsw_all_bills, nsw_Bill
+from ausbills.nsw_parliament import nsw_all_bills, nsw_Bill
 
 all_the_bills_mate = nsw_all_bills
 print(nsw_Bill(all_the_bills_mate).status)
@@ -87,14 +87,14 @@ print(nsw_Bill(all_the_bills_mate).status)
 
 ---
 
-## ACT Legislative Assembly
+## ACT Government
 
 This module allows you to scrape bill data from the [Australian Capital Territory Legislative Assembly](https://www.parliament.act.gov.au/parliamentary-business/in-the-chamber/bills/summary_of_bills) website using _beautiful soup_.
 
 Similarly to the Federal Parliament and WA modules, you can scrape all the bills like this:
 
 ```python
-from act_legislative_assembly import act_all_bills as all_bills
+from ausbills.act_parliament import act_all_bills as all_bills
 
 print(all_bills)
 print('The 5th Bill is ' + all_bills[4])
@@ -109,9 +109,40 @@ print(some_bill.title)
 
 ---
 
+## Queensland Government
+
+This module integrates with the [Queensland government's legislation site](https://www.legislation.qld.gov.au/) to pull bills.
+
+Queensland is a bit different to the other jurisdictions' modules, because it returns its bills in a JSON format. However returning the bills still works the same way:
+
+Return all bills in a list:
+
+```python
+from ausbills.qld_parliament import qld_all_bills, qld_Bill
+
+bills_list = qld_all_bills
+print(bills_list[45])
+```
+
+To get more data from an individual bill, use the **qld_Bill** class:
+
+```python
+from aubills.qld_parliament import qld_all_bills, qld_Bill
+
+some_bill_mate = qld_all_bills[72]
+bill_obj = qld_Bill(some_bill_mate)
+
+# Print the Explanatory Note URL:
+print('Click me:\n' + bill_obj.explanatory_note)
+```
+
+---
+
 ## Contributing
 
-We use **BeautifulSoup** to scrape the bills from the Bills websites. so make sure you become familiar with the docs [here](https://www.crummy.com/software/BeautifulSoup/bs4/doc/).
+We mostly use **BeautifulSoup** to scrape the bills from the Bills websites. so make sure you become familiar with the docs [here](https://www.crummy.com/software/BeautifulSoup/bs4/doc/).
+
+We use **json** for the Queensland site, so get familiar with that [here](https://docs.python.org/3/library/json.html):
 
 Fork the repo and install requirements
 
