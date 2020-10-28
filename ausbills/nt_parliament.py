@@ -48,8 +48,6 @@ class nt_All_Bills(object):
 nt_all_bills = nt_All_Bills().data
 
 class nt_Bill(object):
-    _nt_all_bills = nt_all_bills
-
     def __init__(self, input):
         if(isinstance(input, dict)):
             try:
