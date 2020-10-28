@@ -1,3 +1,4 @@
+import re
 import json
 from requests import get
 from bs4 import BeautifulSoup
@@ -9,8 +10,13 @@ URL = 'url'
 ID = 'id'
 SHORT_TITLE = 'short_title'
 STATUS = 'status'
+STATUS_REPORT = 'status_report'
 YEAR = 'year'
 BILL_TYPE = 'bill_type'
+EXPLANATORY_MEMORANDUM = 'explanatory_memorandum'
+LOWER_SPONSOR = 'lower_sponsor'
+CIRCULATION_PRINT = 'circulation_print'
+UPPER_SPONSOR = 'upper_sponsor'
 
 class vic_All_Bills(object):
     _bills_data = []
@@ -40,3 +46,76 @@ class vic_All_Bills(object):
         return(self._bills_data)
     
 vic_all_bills = vic_All_Bills().data
+
+class vic_Bill(object):
+    def __init__(self, input):
+        if(isinstance(input, dict)):
+            try:
+                self.create_vars(input)
+            except Exception as e:
+                raise Exception('Dict must have correct keys, missing key ' + e)
+        else:
+            raise ValueError('Input data must be valid vic_Bill dict data...')
+    
+    def create_vars(self, init_data):
+        self._bill_data = init_data
+        self.url = init_data[URL]
+        self.id = init_data[ID]
+        self.status = init_data[STATUS]
+        self.year = init_data[YEAR]
+        self.short_title = init_data[SHORT_TITLE]
+        self.bill_type = init_data[BILL_TYPE]
+        try:
+            self.bill_soup = BeautifulSoup(get(self.url).text, 'lxml')
+        except:
+            raise Exception('Unable to scrape ' + self.url)
+        
+    @property
+    def status_report(self):
+        try:
+            return(self.bill_soup.find('li', {'data-tid': 'Status Report'}).find('a')['href'].strip())
+        except:
+            return ''
+
+    @property
+    def explanatory_memorandum(self):
+        try:
+            return(self.bill_soup.find('li', {'data-tid': re.compile(r'(Introduction print – Explanatory Memorandum|Circulation print – Explanatory Memorandum)')}).find('a')['href'].strip())
+        except:
+            return ''
+
+    @property
+    def circulation_print(self):
+        try:
+            return(self.bill_soup.find('li', {'data-tid': 'Circulation print – Bill'}).find('a')['href'].strip())
+        except:
+            return ''
+    
+    @property
+    def introduction_print(self):
+        try:
+            return(self.bill_soup.find('li', {'data-tid': 'Introduction print – Bill'}).find('a')['href'].strip())
+        except:
+            return ''
+
+    @property
+    def lower_sponsor(self):
+        try:
+            return(self.bill_soup.find_all('span', {'class': 'lgs-bill-table__term-title--bold'})[0].text.replace('Hon', '').replace('.', '').strip())
+        except:
+            return ''
+
+    @property
+    def upper_sponsor(self):
+        try:
+            return(self.bill_soup.find_all('span', {'class': 'lgs-bill-table__term-title--bold'})[-1].text.replace('Hon', '').replace('.', '').strip())
+        except:
+            return ''
+
+    @property
+    def data(self):
+        self._bill_data[STATUS_REPORT] = self.status_report
+        self._bill_data[EXPLANATORY_MEMORANDUM] = self.explanatory_memorandum
+        self._bill_data[LOWER_SPONSOR] = self.lower_sponsor
+        self._bill_data[CIRCULATION_PRINT] = self.circulation_print
+        return(self._bill_data)
