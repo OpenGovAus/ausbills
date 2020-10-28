@@ -53,8 +53,6 @@ class tas_All_Bills(object):
 tas_all_bills = tas_All_Bills().data
 
 class tas_Bill(object):
-    _all_bills = tas_all_bills
-
     def __init__(self, input):
         if(isinstance(input, dict)):
             try:

@@ -42,8 +42,6 @@ class sa_All_Bills(object):
 sa_all_bills = sa_All_Bills().data
 
 class sa_Bill(object):
-    _all_bills = sa_all_bills
-
     def __init__(self, input):
         if(isinstance(input, dict)):
             try:
