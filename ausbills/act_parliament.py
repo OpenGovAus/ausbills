@@ -152,8 +152,6 @@ class All_Bills(object):
 act_all_bills = All_Bills().data
 
 class act_Bill(object):
-    _all_bills = act_all_bills
-
     def __init__(self, input):
         if(isinstance(input, dict)):
             try:

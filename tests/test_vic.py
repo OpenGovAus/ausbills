@@ -1,6 +1,7 @@
 from ausbills.vic_parliament import vic_all_bills, vic_Bill
 import pytest
 import random
+import json
 import io
 
 def test_vic():
@@ -9,4 +10,4 @@ def test_vic():
     bills_sample = [all_the_bills_mate[i] for i in random_numbers]
 
     for bill in bills_sample:
-        print(vic_Bill(bill).lower_sponsor)
+        print(json.dumps(vic_Bill(bill).data, indent=2))

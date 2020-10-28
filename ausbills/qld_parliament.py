@@ -55,8 +55,6 @@ class qld_All_Bills(object):
 qld_all_bills = qld_All_Bills().data
 
 class qld_Bill(object):
-    _all_bills = qld_all_bills
-
     def __init__(self, input):
         if(isinstance(input, dict)):
             try:
