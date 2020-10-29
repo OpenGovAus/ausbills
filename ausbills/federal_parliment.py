@@ -1,3 +1,6 @@
+from ausbills.models import BillMeta, Bill
+from .types_parliament import Parliament, House
+from dataclasses import dataclass
 from ausbills import types_parliament
 import json
 
@@ -15,7 +18,7 @@ from typing import List, Dict
 log = get_logger(__file__)
 
 
-DATE_FMT = "%{0}d/%{0}m/%y".format('') 
+DATE_FMT = "%{0}d/%{0}m/%y".format('')
 
 CHAMBER = "chamber"
 SHORT_TITLE = "short_title"
@@ -42,6 +45,7 @@ bills_legislation_url = "https://www.aph.gov.au/Parliamentary_Business/Bills_Leg
 
 this_year = datetime.datetime.now().year
 chambers = ["House", "Senate"]
+
 
 class AllBills(object):
     this_year = datetime.datetime.now().year
@@ -78,8 +82,10 @@ class AllBills(object):
                         " ", "_").replace(".", "")] = row_data[i]
                 row_dict[URL] = bill_url_string
                 row_dict[ID] = bill_url_string.split('?')[-1].split('=')[-1]
-                row_dict[SHORT_TITLE] = row_dict[SHORT_TITLE].replace('\n', '').replace('    ', '').replace('\r', '').replace('\u00a0', ',').replace('$', 'AUD ').replace('ia\u2014', 'ia\'').replace('rans\u2014', 'rans\'').replace('\x80', '').replace('\x99', '').replace('\x94', '')
-                row_dict[SHORT_TITLE] = row_dict[SHORT_TITLE].replace('\u2014', '-')
+                row_dict[SHORT_TITLE] = row_dict[SHORT_TITLE].replace('\n', '').replace('    ', '').replace('\r', '').replace('\u00a0', ',').replace(
+                    '$', 'AUD ').replace('ia\u2014', 'ia\'').replace('rans\u2014', 'rans\'').replace('\x80', '').replace('\x99', '').replace('\x94', '')
+                row_dict[SHORT_TITLE] = row_dict[SHORT_TITLE].replace(
+                    '\u2014', '-')
                 row_dict = self._convert_to_datetime(row_dict)
                 self._bills_data.append(row_dict)
             except Exception as e:
@@ -128,13 +134,15 @@ class AllBills(object):
                 if bill_dict[house_stages[i]] is not None and bill_dict[house_stages[i + 1]] is not None:
                     if bill_dict[house_stages[i]] > bill_dict[house_stages[i + 1]]:
                         d = bill_dict[house_stages[i + 1]]
-                        bill_dict[house_stages[i + 1]] = datetime.date(d.year + 1, d.month, d.day)
+                        bill_dict[house_stages[i + 1]
+                                  ] = datetime.date(d.year + 1, d.month, d.day)
         elif bill_dict[CHAMBER] == self.chambers[1]:
             for i in range(len(senate_stages) - 1):
                 if bill_dict[senate_stages[i]] is not None and bill_dict[senate_stages[i + 1]] is not None:
                     if bill_dict[senate_stages[i]] > bill_dict[senate_stages[i + 1]]:
                         d = bill_dict[senate_stages[i + 1]]
-                        bill_dict[senate_stages[i + 1]] = datetime.date(d.year + 1, d.month, d.day)
+                        bill_dict[senate_stages[i + 1]
+                                  ] = datetime.date(d.year + 1, d.month, d.day)
 
         return bill_dict
 
@@ -154,13 +162,7 @@ def get_all_bills():
     return _all_bills_global
 
 
-
 ####################### NEW #######################
-
-
-from dataclasses import dataclass
-from .types_parliament import Parliament, House
-from ausbills.models import BillMeta, Bill
 
 
 class DateString(str):
@@ -168,26 +170,32 @@ class DateString(str):
 
 # Your state specific BillMeta[State] should extend BillMeta
 # Then ass any state specific fields
+
+
 @dataclass
 class BillMetaFed(BillMeta):
     intro_house: DateString
     passed_house: DateString
     intro_senate: DateString
-    passed_senate: DateString 
+    passed_senate: DateString
     assent_date: DateString
     act_no: int
 
 # Bill[State] extends both BillMeta[State] and Bill
+
+
 @dataclass
 class BillFed(Bill, BillMetaFed):
     # Todo add state specific fields
     sponsor: str
     portfolio: str
-    bill_text_links: List[Dict] # TODO need to make more general
-    bill_em_links: List[Dict] # TODO need to make more general
+    bill_text_links: List[Dict]  # TODO need to make more general
+    bill_em_links: List[Dict]  # TODO need to make more general
 
 # TODO need to discuss the general datestring for ausbills. I used YYYY-MM-DD
-def dt_to_str(in_date, template = "YYYY-MM-DD"):
+
+
+def dt_to_str(in_date, template="YYYY-MM-DD"):
     template
     if in_date is not None and not isinstance(in_date, str):
         out_date = template.replace("YYYY", str(in_date.year))\
@@ -209,40 +217,38 @@ def get_bills_metadata() -> List[BillMetaFed]:
     for bill_dict in _all_bills:
         house = "LOWER" if bill_dict[CHAMBER] == "house" else "UPPER"
         bill_meta = BillMetaFed(
-            parliament = Parliament.FEDERAL,
+            parliament=Parliament.FEDERAL,
             house=house,
             id=bill_dict[ID],
-            title= bill_dict[SHORT_TITLE],
+            title=bill_dict[SHORT_TITLE],
             link=bill_dict[URL],
-            intro_house = dt_to_str(bill_dict[INTRO_HOUSE]),
-            passed_house = dt_to_str(bill_dict[PASSED_HOUSE]),
-            intro_senate = dt_to_str(bill_dict[INTRO_SENATE]),
-            passed_senate = dt_to_str(bill_dict[PASSED_SENATE]),
-            assent_date = dt_to_str(bill_dict[ASSENT_DATE]),
-            act_no = bill_dict[ACT_NO]
+            intro_house=dt_to_str(bill_dict[INTRO_HOUSE]),
+            passed_house=dt_to_str(bill_dict[PASSED_HOUSE]),
+            intro_senate=dt_to_str(bill_dict[INTRO_SENATE]),
+            passed_senate=dt_to_str(bill_dict[PASSED_SENATE]),
+            assent_date=dt_to_str(bill_dict[ASSENT_DATE]),
+            act_no=bill_dict[ACT_NO]
 
         )
         _bill_meta_list.append(bill_meta)
     return(_bill_meta_list)
 
 
-
 class BillFedHelper:
     _bill_data = dict()
 
     def __init__(self, bill_meta: BillMetaFed):
-            self.url = bill_meta.link
-            self.chamber = bill_meta.house
-            self.short_title = bill_meta.title
-            self.intro_house = bill_meta.intro_house
-            self.passed_house = bill_meta.passed_house
-            self.intro_senate = bill_meta.intro_senate
-            self.passed_house = bill_meta.passed_senate
-            self.assent_date = bill_meta.assent_date
-            self.act_no = bill_meta.act_no
-            self.bill_url = requests.get(self.url).text
-            self.bill_soup = BeautifulSoup(self.bill_url, 'lxml')
-
+        self.url = bill_meta.link
+        self.chamber = bill_meta.house
+        self.short_title = bill_meta.title
+        self.intro_house = bill_meta.intro_house
+        self.passed_house = bill_meta.passed_house
+        self.intro_senate = bill_meta.intro_senate
+        self.passed_house = bill_meta.passed_senate
+        self.assent_date = bill_meta.assent_date
+        self.act_no = bill_meta.act_no
+        self.bill_url = requests.get(self.url).text
+        self.bill_soup = BeautifulSoup(self.bill_url, 'lxml')
 
     def __str__(self):
         return f"<Bill | URL: '{self.url}'>"
@@ -335,7 +341,8 @@ class BillFedHelper:
 
     def get_sponsor(self) -> Maybe[str]:
         try:
-            tr = self.bill_soup.find("div", id='main_0_billSummary_sponsorPanel')
+            tr = self.bill_soup.find(
+                "div", id='main_0_billSummary_sponsorPanel')
             if tr is None:
                 return ''
             # return Just(tr.find('dd').text).value
@@ -343,11 +350,11 @@ class BillFedHelper:
         except Exception as e:
             log.warning(e)
             return ''
-            
 
     def get_portfolio(self) -> Maybe[str]:
         try:
-            tr = self.bill_soup.find("div", id='main_0_billSummary_portfolioPanel')
+            tr = self.bill_soup.find(
+                "div", id='main_0_billSummary_portfolioPanel')
             # return '' if tr is None else Just(tr.find_all('dd')[0].text).value
             return tr.find_all('dd')[0].text.replace('  ', '').replace('\n', '').replace('\r', '')
         except Exception as e:
@@ -365,18 +372,19 @@ class BillFedHelper:
         for TEXT in text_type:
             for reading in ['first', 'third', 'aspassed']:
                 if self.bill_text_links[reading][TEXT] != '':
-                    self._bill_data[TEXT_LINK + '_' + TEXT] = self.bill_text_links[reading][TEXT]
+                    self._bill_data[TEXT_LINK + '_' +
+                                    TEXT] = self.bill_text_links[reading][TEXT]
                     self._bill_data[CURRENT_READING] = reading
-            self._bill_data[EM_LINK + '_' + TEXT] = self.explanatory_memoranda_links[TEXT]
+            self._bill_data[EM_LINK + '_' +
+                            TEXT] = self.explanatory_memoranda_links[TEXT]
         return self._bill_data
 
     def to_json(self) -> str:
         return json.dumps(self._bill_data, cls=AusBillsJsonEncoder)
 
 
-
 ############### NEW #######################
-        
+
 # wrapper function for getting the bill
 def get_bill(bill_meta: BillMetaFed) -> BillFed:
     """Uses the bill metadata to scrape the rest of the bill info
@@ -391,25 +399,22 @@ def get_bill(bill_meta: BillMetaFed) -> BillFed:
     fed_helper: BillFedHelper = BillFedHelper(bill_meta)
     bill_fed = BillFed(
         # From bill_meta
-        parliament = str(bill_meta.parliament),
-        house = bill_meta.house,
-        id= bill_meta.id,
-        title= bill_meta.title,
+        parliament=str(bill_meta.parliament),
+        house=bill_meta.house,
+        id=bill_meta.id,
+        title=bill_meta.title,
         link=bill_meta.link,
-        intro_house = bill_meta.intro_house,
-        passed_house = bill_meta.passed_house,
-        intro_senate = bill_meta.intro_senate,
-        passed_senate = bill_meta.passed_senate,
-        assent_date = bill_meta.assent_date,
-        act_no = bill_meta.act_no,
+        intro_house=bill_meta.intro_house,
+        passed_house=bill_meta.passed_house,
+        intro_senate=bill_meta.intro_senate,
+        passed_senate=bill_meta.passed_senate,
+        assent_date=bill_meta.assent_date,
+        act_no=bill_meta.act_no,
         # From fed_helper
         summary=fed_helper.summary,
         sponsor=fed_helper.portfolio,
         portfolio=fed_helper.portfolio,
         bill_text_links=fed_helper.bill_text_links,
-        bill_em_links = fed_helper.explanatory_memoranda_links
+        bill_em_links=fed_helper.explanatory_memoranda_links
     )
     return(bill_fed)
-
-    
-    
