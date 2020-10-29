@@ -199,6 +199,11 @@ def dt_to_str(in_date, template = "YYYY-MM-DD"):
 
 # this is just a wrapper for AllBills().data that returns List[BillMetaFed]
 def get_bills_metadata() -> List[BillMetaFed]:
+    """Gets a list of all the federal bills metadata
+
+    Returns:
+        List[BillMetaFed]: BillMetaFed is to be used with get_bill(BillMetaFed) to get detailed data
+    """
     _all_bills = AllBills().data
     _bill_meta_list = []
     for bill_dict in _all_bills:
@@ -374,6 +379,15 @@ class BillFedHelper:
         
 # wrapper function for getting the bill
 def get_bill(bill_meta: BillMetaFed) -> BillFed:
+    """Uses the bill metadata to scrape the rest of the bill info
+
+    Args:
+        bill_meta (BillMetaFed): Federal specific BillMeta
+
+    Returns:
+        BillFed: Including the federal specific information
+        Note: use BillFed.asDict() and BillFed.asJson() to get the data
+    """
     fed_helper: BillFedHelper = BillFedHelper(bill_meta)
     bill_fed = BillFed(
         # From bill_meta
