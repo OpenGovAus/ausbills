@@ -1,7 +1,7 @@
-from ausbills.federal_parliment import get_all_bills, get_bills_metadata
+from ausbills.federal_parliment import get_all_bills, get_bills_metadata, get_bill
 import datetime
 import random
-
+from ausbills.models import BillMeta, Bill
 import logging
 
 # from ausbills.util.digicert_certs import *
@@ -23,13 +23,39 @@ ACT_NO = "act_no"
 ID = "id"
 
 
-def test_get_bills_meta():
-    bills_metadata =get_bills_metadata()
+@pytest.fixture
+def bills_meta_sample():
+    bills_metadata = get_bills_metadata()
     random_numbers = [int(random.random()*len(bills_metadata)) for i in range(5)]
     bills_meta_sample = [bills_metadata[i] for i in random_numbers]
-    for b_m in bills_meta_sample:
-        print(b_m)
+    return(bills_meta_sample)
 
+
+def test_get_bills_meta(bills_meta_sample):
+    for b_m in bills_meta_sample:
+        assert isinstance(b_m, BillMeta)
+
+
+def test_get_bills(bills_meta_sample):
+    for b_m in bills_meta_sample:
+        assert isinstance(b_m, BillMeta)
+        bill_info = get_bill(b_m)
+        assert isinstance(bill_info, Bill)
+
+def test_bill_dict(bills_meta_sample):
+    for b_m in bills_meta_sample:
+        bill_info = get_bill(b_m)
+        b_dict =bill_info.asDict()
+        assert isinstance(b_dict, dict)
+
+def test_bill_json(bills_meta_sample):
+    for b_m in bills_meta_sample:
+        bill_info = get_bill(b_m)
+        b_json =bill_info.asJson()
+        assert isinstance(b_json, str)
+
+
+# old test
 def test_federal_all_bills():
     all_bills = get_all_bills()
     random_numbers = [int(random.random()*len(all_bills)) for i in range(5)]
