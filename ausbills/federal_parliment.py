@@ -1,3 +1,5 @@
+from ausbills import types_parliament
+from ausbills.models import BillMeta
 import json
 
 
@@ -9,8 +11,12 @@ from pymonad.maybe import Maybe, Nothing, Just
 
 from ausbills.json_encoder import AusBillsJsonEncoder
 from ausbills.log import get_logger
+from typing import List
 
 log = get_logger(__file__)
+
+
+DATE_FMT = "%{0}d/%{0}m/%y".format('') 
 
 CHAMBER = "chamber"
 SHORT_TITLE = "short_title"
@@ -35,11 +41,13 @@ READINGS = "readings"
 bills_legislation_url = "https://www.aph.gov.au/Parliamentary_Business/Bills_Legislation/Bills_Lists/Details_page" \
                         "?blsId=legislation%2fbillslst%2fbillslst_c203aa1c-1876-41a8-bc76-1de328bdb726"
 
+this_year = datetime.datetime.now().year
+chambers = ["House", "Senate"]
 
 class AllBills(object):
+    this_year = datetime.datetime.now().year
     _bills_data = []
     chambers = ["House", "Senate"]
-    this_year = datetime.datetime.now().year
 
     def __init__(self):
         self._build_dataset()
@@ -136,6 +144,63 @@ class AllBills(object):
         return self._bills_data
 
 
+####################### NEW #######################
+
+
+from dataclasses import dataclass
+from .types_parliament import Parliament, House
+
+class DateString(str):
+    pass
+
+# Your state specific BillMeta[State] should extend BillMeta
+# Then ass any state specific fields
+@dataclass
+class BillMetaFed(BillMeta):
+    intro_house: DateString
+    passed_house: DateString
+    intro_senate: DateString
+    passed_senate: DateString 
+    assent_date: DateString
+    act_no: int
+
+
+
+def dt_to_str(in_date, template = "YYYY-MM-DD"):
+    template
+    if in_date is not None and not isinstance(in_date, str):
+        out_date = template.replace("YYYY", str(in_date.year))\
+            .replace("MM", f"{in_date.month:02d}").replace("DD", f"{in_date.day:02d}")
+    else:
+        out_date = ''
+    return out_date
+
+def get_bills_metadata() -> List[BillMetaFed]:
+    _all_bills = AllBills().data
+    _bill_meta_list = []
+    for bill_dict in _all_bills:
+        house = House.LOWER if bill_dict[CHAMBER] == "house" else House.UPPER
+        bill_meta = BillMetaFed(
+            parliament = Parliament.FEDERAL,
+            house=house,
+            id=bill_dict[ID],
+            title= bill_dict[SHORT_TITLE],
+            link=bill_dict[URL],
+            intro_house = dt_to_str(bill_dict[INTRO_HOUSE]),
+            passed_house = dt_to_str(bill_dict[PASSED_HOUSE]),
+            intro_senate = dt_to_str(bill_dict[INTRO_SENATE]),
+            passed_senate = dt_to_str(bill_dict[PASSED_SENATE]),
+            assent_date = dt_to_str(bill_dict[ASSENT_DATE]),
+            act_no = bill_dict[ACT_NO]
+
+        )
+        _bill_meta_list.append(bill_meta)
+    return(_bill_meta_list)
+        
+
+
+
+
 _all_bills_global = None
 
 
@@ -149,7 +214,7 @@ def get_all_bills():
 class Bill:
     _bill_data = dict()
 
-    def __init__(self, bill_dict: dict = None, bill_url: str = None, bill_id: str = None, date_format="YYYY-MM-DD"):
+    def __init__(self, bill_dict: dict = None, bill_url: str = None, bill_id: str = None):
         if all(i is None for i in {bill_id, bill_url, bill_dict}):
             raise ValueError("At least one of the arguments [bill_dict, bill_url, bill_id] must be provided.")
 
@@ -184,23 +249,8 @@ class Bill:
             self.act_no = initial_data[ACT_NO]
             self.bill_url = requests.get(self.url).text
             self.bill_soup = BeautifulSoup(self.bill_url, 'lxml')
-            # date stuff
-            self.date_format = date_format
-            house_stages = [INTRO_HOUSE, PASSED_HOUSE,
-                            INTRO_SENATE, PASSED_SENATE, ASSENT_DATE]
-            for stage in house_stages:
-                self._bill_data[stage] = self._format_date(self._bill_data_original[stage])
-        except KeyError as e:
-            raise KeyError('(class Bill) bill_dict must have all keys. KeyError: ' + str(e))
-
-    def _format_date(self, in_date):
-        template = self.date_format
-        if in_date is not None and not isinstance(in_date, str):
-            out_date = template.replace("YYYY", str(in_date.year))\
-                .replace("MM", f"{in_date.month:02d}").replace("DD", f"{in_date.day:02d}")
-        else:
-            out_date = ''
-        return out_date
+        except Exception as e:
+            print(e)
 
     def __str__(self):
         return f"<Bill | URL: '{self.url}'>"
