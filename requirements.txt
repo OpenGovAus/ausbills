@@ -3,7 +3,7 @@ beautifulsoup4==4.9.3
 lxml==4.6.1
 requests==2.24.0
 twine==3.2.0
-pytest==6.1.1
+pytest==6.1.2
 six~=1.15.0
 DateTime~=4.3
 setuptools~=50.3.2
