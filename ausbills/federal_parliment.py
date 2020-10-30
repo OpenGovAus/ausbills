@@ -70,7 +70,6 @@ class AllBills(object):
         trs = tables[table_no].findAll('tr')
         tr = trs.pop(0)
         self.headings = self._get_row_data(tr.findAll('td'))
-
         for tr in trs:
             row_dict = dict()
             try:
@@ -228,7 +227,6 @@ def get_bills_metadata() -> List[BillMetaFed]:
             passed_senate=dt_to_str(bill_dict[PASSED_SENATE]),
             assent_date=dt_to_str(bill_dict[ASSENT_DATE]),
             act_no=bill_dict[ACT_NO]
-
         )
         _bill_meta_list.append(bill_meta)
     return(_bill_meta_list)
