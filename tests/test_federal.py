@@ -3,10 +3,11 @@ import datetime
 import random
 from ausbills.models import BillMeta, Bill
 import logging
+from dataclasses import asdict
 
 # from ausbills.util.digicert_certs import *
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 import pytest
 import requests
@@ -34,6 +35,7 @@ def bills_meta_sample():
 def test_get_bills_meta(bills_meta_sample):
     for b_m in bills_meta_sample:
         assert isinstance(b_m, BillMeta)
+        print("test_get_bills_meta: "+str(b_m))
 
 
 def test_get_bills(bills_meta_sample):
@@ -47,6 +49,7 @@ def test_bill_dict(bills_meta_sample):
         bill_info = get_bill(b_m)
         b_dict =bill_info.asDict()
         assert isinstance(b_dict, dict)
+        print("Bill Dict" + str(b_dict))
 
 def test_bill_json(bills_meta_sample):
     for b_m in bills_meta_sample:
@@ -55,30 +58,30 @@ def test_bill_json(bills_meta_sample):
         assert isinstance(b_json, str)
 
 
-# old test
-def test_federal_all_bills():
-    all_bills = get_all_bills()
-    random_numbers = [int(random.random()*len(all_bills)) for i in range(5)]
+# # old test
+# def test_federal_all_bills():
+#     all_bills = get_all_bills()
+#     random_numbers = [int(random.random()*len(all_bills)) for i in range(5)]
 
-    bills_sample = [all_bills[i] for i in random_numbers]
+#     bills_sample = [all_bills[i] for i in random_numbers]
 
-    NoneType = type(None)
+#     NoneType = type(None)
 
-    assert isinstance(all_bills, list)
+#     assert isinstance(all_bills, list)
 
-    for bd in bills_sample:
-        assert isinstance(bd[URL], str)
-        print(bd[ID] + " - " + bd[SHORT_TITLE])
-        print(bd.keys())
-        assert '=' in bd[URL]
-        assert bd[URL].split(':')[0] in ['http', 'https']
-        assert bd[CHAMBER] in ["House", "Senate"]
-        assert isinstance(bd[SHORT_TITLE], str)
-        assert isinstance(bd[INTRO_HOUSE], (datetime.date, NoneType))
-        assert isinstance(bd[PASSED_HOUSE], (datetime.date, NoneType))
-        assert isinstance(bd[INTRO_SENATE], (datetime.date, NoneType))
-        assert isinstance(bd[PASSED_SENATE], (datetime.date, NoneType))
-        assert isinstance(bd[ASSENT_DATE], (datetime.date, NoneType))
+#     for bd in bills_sample:
+#         assert isinstance(bd[URL], str)
+#         print(bd[ID] + " - " + bd[SHORT_TITLE])
+#         print(bd.keys())
+#         assert '=' in bd[URL]
+#         assert bd[URL].split(':')[0] in ['http', 'https']
+#         assert bd[CHAMBER] in ["House", "Senate"]
+#         assert isinstance(bd[SHORT_TITLE], str)
+#         assert isinstance(bd[INTRO_HOUSE], (datetime.date, NoneType))
+#         assert isinstance(bd[PASSED_HOUSE], (datetime.date, NoneType))
+#         assert isinstance(bd[INTRO_SENATE], (datetime.date, NoneType))
+#         assert isinstance(bd[PASSED_SENATE], (datetime.date, NoneType))
+#         assert isinstance(bd[ASSENT_DATE], (datetime.date, NoneType))
         # assert isinstance(bd[ACT_NO], (int, NoneType))
 
         # Do the bill tests better
