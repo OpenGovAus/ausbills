@@ -18,7 +18,7 @@ HANSARD = 'hansard'
 EXPLANATORY_STATEMENT = 'explanatory_statement'
 COMPATIBILITY_STATEMENT = 'compatibility_statement'
 
-ninth_assembly_bills = "https://www.parliament.act.gov.au/parliamentary-business/in-the-chamber/bills/summary_of_bills"
+ninth_assembly_bills = "https://www.parliament.act.gov.au/parliamentary-business/in-the-chamber/previous-assemblies/ninth-assembly/summary_of_bills"
 eighth_assembly_bills = "https://www.parliament.act.gov.au/parliamentary-business/in-the-chamber/previous-assemblies/eighth-assembly/summary_of_bills"
 ninth_siteData = requests.get(ninth_assembly_bills).text
 eighth_siteData = requests.get(eighth_assembly_bills).text
