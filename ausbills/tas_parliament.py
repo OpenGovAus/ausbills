@@ -3,7 +3,7 @@ from requests import get
 from bs4 import BeautifulSoup
 
 current_year = datetime.today().year
-url_split = ['https://www.parliament.tas.gov.au/bills/Bills', '/BillsWeb', '.htm']
+url_split = ['https://www.parliament.tas.gov.au/bill/Bills', '/BillWeb', '.html']
 
 URL = 'url'
 TITLE = 'title'
@@ -34,8 +34,9 @@ class tas_All_Bills(object):
 
     def create_dataset(self):
         for year in range(current_year - (current_year - 2002), current_year + 1):
-            soup = BeautifulSoup(get(url_split[0] + str(year) + url_split[1] + str(year) + url_split[2]).text, 'lxml')
-            table = soup.find('table', {'bordercolor': '#CCCCCC'})
+            bills_url = url_split[0] + str(year) + url_split[1] + str(year) + url_split[2]
+            soup = BeautifulSoup(get(bills_url).text, 'lxml')
+            table = soup.find('table', {'class': 'ui table'})
             bills = table.find_all('a')
             _bill_urls = []
             _bill_titles = []
@@ -68,7 +69,7 @@ class tas_Bill(object):
         self.title = init_data[TITLE]
         try:
             self.bill_soup = BeautifulSoup(get(self.url).text, 'lxml')
-            table = self.bill_soup.find('table', {'bordercolor': '#CCCCCC'})
+            table = self.bill_soup.find('table', {'class': 'ui celled fixed table'})
             self._rows = table.find_all('tr')
         except:
             raise Exception('Unable to scrape ' + self.url)
@@ -78,16 +79,19 @@ class tas_Bill(object):
 
     @property
     def sponsor(self):
-        rows = self._rows
         try:
-            return(rows[0].find('td', {'colspan': '4'}).text.replace(' Introduced by: ', '').strip())
+            div = self.bill_soup.find('div', {'class': 'ui blue segment'})
+        except:
+            raise Exception('Couldn\'t find the header information for %s.' % (self.url))
+        try:
+            return(div.find_all('p')[1].text.replace('Introduced by: ', '').strip())
         except:
             return ''
 
     @property
     def bill_text_url(self):
         try:
-            return(url_split[0] + self._bill_data[YEAR] + '/' + self._rows[1].find('a')['href'])
+            return(url_split[0][:-11] + self.bill_soup.find('a', text='Text of Bill as introduced')['href'])
         except:
             return ''
 
@@ -100,39 +104,38 @@ class tas_Bill(object):
         return(self.amended_check()[0])
 
     @property
-    def passed_lower(self):
-        column = self._rows[12:][0].find('td')
-        try:
-            return(self.format_date(column.find('br').previousSibling.strip().replace('HA Agreed: ', '')))
-        except:
-            return False
-
+    def lower_committee(self):
+        column = self._rows[5].find_all('td')[1]
+        if column.text:
+            return(self.format_date(column.text))
+        else:
+            return ''
+    
     @property
-    def passed_upper(self):
-        column = self._rows[12:][0].find('td')
-        try:
-            return(self.format_date(column.find('br').nextSibling.strip().replace('Agreed Both: ', '')))
-        except:
-            return False
+    def upper_committee(self):
+        column = self._rows[5].find_all('td')[3]
+        if column.text:
+            return(self.format_date(column.text))
+        else:
+            return ''
 
     @property
     def assented(self):
-        column = self._rows[12:][0].find('td')
         try:
-            return(self.format_date(column.find_all('br', limit=2)[-1].nextSibling.strip().replace('Royal Assent: ', '')))
+            column = self._rows[10].find_all('td')[1]
+            return(self.format_date(column.text))
         except:
-            return False
+            return ''
 
     @property
     def act_no(self):
-        column = self._rows[12:][0].find('td')
         try:
-            return(column.find_all('br', limit=4)[-1].nextSibling.replace('Act Number:', '').strip())
+            return(self._rows[10].find_all('td')[-1].text.strip())
         except:
             return ''
 
     def amended_check(self):
-        columns = self._rows[9:][0].find_all('td')
+        columns = self._rows[7].find_all('td')
         lower = columns[1].text.strip()
         upper = columns[3].text.strip()
         if(lower == 'Yes'):
@@ -147,7 +150,7 @@ class tas_Bill(object):
         return[lower, upper]
 
     def get_first_readings(self):
-        columns = self._rows[3:][0].find_all('td')
+        columns = self._rows[1].find_all('td')
         try:
             self.lower_first_reading = self.format_date(columns[1].text.strip())
         except:
@@ -159,7 +162,7 @@ class tas_Bill(object):
             self.upper_first_reading = ''
 
     def get_second_readings(self):
-        columns = self._rows[5:][0].find_all('td')
+        columns = self._rows[3].find_all('td')
         try:
             self.lower_second_reading = self.format_date(columns[1].text.strip())
         except:
@@ -171,7 +174,7 @@ class tas_Bill(object):
             self.upper_second_reading = ''
 
     def get_third_readings(self):
-        columns = self._rows[10:][0].find_all('td')
+        columns = self._rows[8].find_all('td')
         try:
             self.lower_third_reading = self.format_date(columns[1].text.strip())
         except:
@@ -188,8 +191,6 @@ class tas_Bill(object):
 
     @property
     def data(self):
-        self._bill_data[PASSED_LOWER] = self.passed_lower
-        self._bill_data[PASSED_UPPER] = self.passed_upper
         self._bill_data[LOWER_FIRST_READING] = self.lower_first_reading
         self._bill_data[LOWER_SECOND_READING] = self.lower_second_reading
         self._bill_data[LOWER_THIRD_READING] = self.lower_third_reading
