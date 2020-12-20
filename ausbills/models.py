@@ -15,8 +15,10 @@ class BillMeta:
 
 @dataclass
 class Bill:
-    # TODO need to expand this
-    summary: str
+    title: str
+    link: UrlStr
+    sponsor: str
+    text_link: str
 
     def asDict(self) -> dict:
         return(self.__dict__)

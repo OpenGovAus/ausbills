@@ -189,7 +189,7 @@ class BillMetaFed(BillMeta):
 @dataclass
 class BillFed(Bill, BillMetaFed):
     # Todo add state specific fields
-    sponsor: str
+    summary: str
     portfolio: str
     bill_text_links: List[Dict]  # TODO need to make more general
     bill_em_links: List[Dict]  # TODO need to make more general
@@ -413,9 +413,10 @@ def get_bill(bill_meta: BillMetaFed) -> BillFed:
         act_no=bill_meta.act_no,
         # From fed_helper
         summary=fed_helper.summary,
-        sponsor=fed_helper.portfolio,
+        sponsor=fed_helper.sponsor,
         portfolio=fed_helper.portfolio,
         bill_text_links=fed_helper.bill_text_links,
-        bill_em_links=fed_helper.explanatory_memoranda_links
+        bill_em_links=fed_helper.explanatory_memoranda_links,
+        text_link=fed_helper.data[CURRENT_READING]
     )
     return(bill_fed)
