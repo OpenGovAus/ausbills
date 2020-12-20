@@ -100,7 +100,7 @@ class AllBills(object):
                 else:
                     row_data.append("")
             except Exception as e:
-                print(e)
+                # print(e)
                 row_data.append("")
         return row_data
 
@@ -401,7 +401,7 @@ def get_bill(bill_meta: BillMetaFed) -> BillFed:
     bill_fed = BillFed(
         title=bill_meta.title,
         link=bill_meta.link,
-        sponsor=fed_helper.sponsor if fed_helper.sponsor !="" else fed_helper.get_portfolio,
+        sponsor=fed_helper.sponsor if fed_helper.sponsor !="" else fed_helper.portfolio,
         text_link=fed_helper.data[CURRENT_READING],
         # From bill_meta
         parliament=str(bill_meta.parliament),
