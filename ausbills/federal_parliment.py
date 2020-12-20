@@ -399,12 +399,14 @@ def get_bill(bill_meta: BillMetaFed) -> BillFed:
     """
     fed_helper: BillFedHelper = BillFedHelper(bill_meta)
     bill_fed = BillFed(
+        title=bill_meta.title,
+        link=bill_meta.link,
+        sponsor=fed_helper.sponsor if fed_helper.sponsor !="" else fed_helper.get_portfolio,
+        text_link=fed_helper.data[CURRENT_READING],
         # From bill_meta
         parliament=str(bill_meta.parliament),
         house=bill_meta.house,
         id=bill_meta.id,
-        title=bill_meta.title,
-        link=bill_meta.link,
         intro_house=bill_meta.intro_house,
         passed_house=bill_meta.passed_house,
         intro_senate=bill_meta.intro_senate,
@@ -413,10 +415,8 @@ def get_bill(bill_meta: BillMetaFed) -> BillFed:
         act_no=bill_meta.act_no,
         # From fed_helper
         summary=fed_helper.summary,
-        sponsor=fed_helper.sponsor,
         portfolio=fed_helper.portfolio,
         bill_text_links=fed_helper.bill_text_links,
         bill_em_links=fed_helper.explanatory_memoranda_links,
-        text_link=fed_helper.data[CURRENT_READING]
     )
     return(bill_fed)
