@@ -173,6 +173,9 @@ class DateString(str):
 
 @dataclass
 class BillMetaFed(BillMeta):
+    parliament: str
+    house: str
+    id: str
     intro_house: DateString
     passed_house: DateString
     intro_senate: DateString

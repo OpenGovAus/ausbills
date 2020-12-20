@@ -9,9 +9,6 @@ UrlStr = NewType('UrlStr', str)
 
 @dataclass
 class BillMeta:
-    parliament: str
-    house: str
-    id: str
     title: str
     link: UrlStr
 
