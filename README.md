@@ -1,6 +1,6 @@
 # Aus Bills
 
-This is a package is for obtaining parliament bills for Australian governments.
+🇦🇺 This is a package is for obtaining parliament bills for Australian governments.
 
 ## Install via pip
 
