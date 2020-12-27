@@ -7,7 +7,7 @@ logging.basicConfig(level=logging.INFO)
 import pytest
 import requests
 
-from ausbills.wa_parliment import *
+from ausbills.wa_parliament import *
 from tests.utils import read_data
 
 
