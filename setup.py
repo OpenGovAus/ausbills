@@ -3,7 +3,7 @@ import os
 import sys
 from setuptools.command.install import install
 
-VERSION = "0.8.0"
+VERSION = "0.9.0"
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -29,19 +29,19 @@ class VerifyVersionCommand(install):
 setuptools.setup(
     name="ausbills",  # Replace with your own username
     version=VERSION,
-    author="Kipling Crossing",
+    author="OpenGov Australia",
     author_email="kip.crossing@gmail.com",
     description="Get current parliament bills from Australian governments.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/KipCrossing/Aus-Bills",
+    url="https://github.com/OpenGovAus/Aus-Bills",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires='>=3.6',
+    python_requires='>=3.9',
     cmdclass={
         'verify': VerifyVersionCommand,
     }
