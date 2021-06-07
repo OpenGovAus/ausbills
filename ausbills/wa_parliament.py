@@ -112,7 +112,7 @@ class BillProgress:
         return BillProgress(**_d)
 
     @staticmethod
-    def read_bill_name_link(td: Tag) -> (str, UrlStr):
+    def read_bill_name_link(td: Tag) -> UrlStr:
         a: Tag = td.children.__next__()
         return a.text, str(waph_base_url / a['href'])
 
