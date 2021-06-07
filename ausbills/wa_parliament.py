@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup, ResultSet, Tag
 import requests
 from datetime import datetime
 
-from ausbills.types_parliament import House
+from ausbills.types import House
 from ausbills.util.either import Either
 from pymonad.either import Left, Right
 from pymonad.maybe import Maybe, Just, Nothing
@@ -34,7 +34,7 @@ waph_base_url = URL("https://www.parliament.wa.gov.au/")
 
 
 def reqs_get_wa_parli(url, *args, **kwargs):
-    return requests.get(url, *args, verify='digicert_sha2_high_assurance_server_ca.pem', **kwargs)
+    return requests.get(url, *args, verify=False, **kwargs)
 
 
 class ScrapeBillProgressException(Exception):
