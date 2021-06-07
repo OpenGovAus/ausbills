@@ -1,5 +1,6 @@
 from enum import Enum
 
+# Parliaments
 
 class Parliament(Enum):
     FEDERAL = "FEDERAL"
@@ -10,8 +11,15 @@ class Parliament(Enum):
     VIC = "VIC"
     SA = "SA"
     TAS = "TAS"
+    ACT = "ACT"
 
 
 class House(Enum):
     UPPER = "UPPER"
     LOWER = "LOWER"
+
+# Bills
+
+class BillTypes(Enum):
+    GOVERNMENT = 'GOVERNMENT'
+    PRIVATE_MEMBER = 'PRIVATE_MEMBER'

@@ -1,289 +1,178 @@
-from bs4 import BeautifulSoup
-import requests
-import datetime
-import calendar
-import re
+import dataclasses
+from dataclasses import dataclass
+from typing import Dict, List
 
-DATE = 'date'
-URL = 'url'
+from ausbills.models import BillMeta, Bill, PdfUrl, UrlStr
+from ausbills.util import BillExtractor, BillListExtractor
+from ausbills.types import Parliament, BillTypes
+
+
 TITLE = 'title'
-DESCRIPTION = 'description'
-PRESENTED_BY = 'presented_by'
-TYPE = 'type'
-STATUS = 'status'
-TEXT_URL = 'text_url'
-SCRUTINY_REPORT = 'scrutiny_report'
-PRESENTATION_SPEECH = 'presentation_speech'
-HANSARD = 'hansard'
-EXPLANATORY_STATEMENT = 'explanatory_statement'
-COMPATIBILITY_STATEMENT = 'compatibility_statement'
+PASSED = 'passed'
+URL = 'url'
+INTRO_ASSEMBLY = 'intro_assembly'
+PASSED_ASSEMBLY = 'passed_assembly'
+BILL_TYPE = 'bill_type'
+ID = 'id'
 
-ninth_assembly_bills = "https://www.parliament.act.gov.au/parliamentary-business/in-the-chamber/previous-assemblies/ninth-assembly/summary_of_bills"
-eighth_assembly_bills = "https://www.parliament.act.gov.au/parliamentary-business/in-the-chamber/previous-assemblies/eighth-assembly/summary_of_bills"
-ninth_siteData = requests.get(ninth_assembly_bills).text
-eighth_siteData = requests.get(eighth_assembly_bills).text
+BASE_URL = 'https://legislation.act.gov.au'
 
-class All_Bills(object):
-    _bills_data = [] # This list will end up containing all the bill dict entries, and is the data returned.
 
+class ACTBillList(BillListExtractor):
     def __init__(self):
-        self._build_dataset()
+        bill_volume = self._download_html(
+            'https://legislation.act.gov.au/results?category=cBil&status=Current&action=browse').find(
+                'table', {'id': 'results-table-bill'}).find('tbody')
+        self._bill_list = self._get_bill_list(bill_volume)
 
-    def _build_dataset(self):
-        try:
-            self._scrape_9th_assembly()
-        except Exception as e:
-            print('An exception ocurred when trying to scrape the 9th Assembly:\n')
-            print(e)
-    
-        try:
-            self._scrape_8th_assembly()
-        except Exception as e:
-            print('An exception ocurred when trying to scrape the 8th Assembly:\n')
-            print(e)
+    def _get_bill_list(self, bill_volume):
+        bill_list = []
+        has_passed = False
+        for row in bill_volume.find_all('tr', recursive=False):
+            bill_intro_date = row.find('td')['data-order']
+            __title_col = row.find_all('td')[1]
+            bill_title = __title_col.text.strip()
+            bill_url = BASE_URL + __title_col.find('a')['href']
+            bill_intro = self._get_timestamp(bill_intro_date[:8], '%Y%m%d')
 
-    def _scrape_9th_assembly(self):
-        billPres = []
-        billDescs = []
-
-        soup = BeautifulSoup(ninth_siteData, 'html.parser')
-        div = soup.find("div", {"id": "main"})
-        billTitles = div.find_all('h4')
-        for h4 in div.find_all('h4'): 
-            h4.replace_with('') # Remove all <h4>s from the soup, this makes it less annoying to get the bill presenter string from <strong> tags. The ACT Government, man, it's weird.
-
-        billData = div.find_all(re.compile(r'(div|p)'))
-        allStrong = div.find_all('strong')
-        for strong in range(len(allStrong)):
-            if('This bill' in allStrong[strong].text or 'e bill will also' in allStrong[strong].text):
-                pass
+            __status_col = row.find_all('td')[-1]
+            if __status_col['data-order'] == 'passed':
+                has_passed = True
+                passed_date = self._get_timestamp(
+                    __status_col.contents[1], '%d %B %Y')
             else:
-                billPres.append(allStrong[strong])
-        for entry in billData:
-            if "This bill" in entry.text or "this bill" in entry.text:
-                billDescs.append(entry)
+                passed_date = None
+            bill_type = self._parse_type(row.find_all('td')[2].text)
+            bill_id = bill_url[-6:-1]
 
-        for title in range(len(billTitles)): # Here we loop through every bill and compile its information into an entry in _bills_data
-            _bill_title = billTitles[title].text
-            a = billTitles[title].find('a')
-            if(a == None):
-                if('Aboriginal and Torres Strait Islander Elected Body Amendment Bill 2020' in billTitles[title].text):
-                    _bill_url = 'https://www.legislation.act.gov.au/a/2020-36/'
-                else:
-                    _bill_url = ''
-            else:
-                _bill_url = a['href']
-            _bill_description = billDescs[title].text
-            _bill_presented_by = self._format_presenter_9th(billPres[title].text)[0][13:]
-            _bill_date = self._format_presenter_9th(billPres[title].text)[1]
+            bill_list.append({
+                TITLE: bill_title,
+                URL: bill_url,
+                BILL_TYPE: bill_type,
+                INTRO_ASSEMBLY: bill_intro,
+                PASSED_ASSEMBLY: passed_date,
+                PASSED: has_passed,
+                ID: bill_id,
+            })
+        return bill_list
 
-            bill_dict = {URL: _bill_url, TITLE: _bill_title, DESCRIPTION: _bill_description.replace("\xa0\xa0", " ").replace('‑', '-'), PRESENTED_BY: _bill_presented_by, DATE: _bill_date}
+    def _parse_type(self, type_string):
+        if type_string == 'GOV':
+            return BillTypes.GOVERNMENT.value
+        elif type_string == 'PMB':
+            return BillTypes.PRIVATE_MEMBER.value
 
-            self._bills_data.append(bill_dict)
 
-    def _format_presenter_9th(self, title):
-        formatted = []
-        splitUp = title.replace('\xa0', ' ').split('—', 1)
-        formatted.append(splitUp[0])
-        dateSplit = splitUp[1].split(' ', 2)
-        monthNum = list(calendar.month_name).index(dateSplit[1])
-        finalDate = dateSplit[2] + '-' + "{0:0=2d}".format(monthNum) + '-' + "{0:0=2d}".format(int(dateSplit[0]))
-        formatted.append(finalDate)
-        return(formatted)
+@dataclass
+class BillMetaACT(BillMeta):
+    has_passed: bool
+    bill_type: str
+    passed_assembly: int
+    intro_assembly: int
+    id: int
 
-    def _scrape_8th_assembly(self):
-        billDescs = []
-        billTitles = []
-        billScrutinyReports = []
 
-        soup = BeautifulSoup(eighth_siteData, 'html.parser')
-        div = soup.find('div', {'id': 'main'})
-        paras = div.find_all('p')[8:]
-        for p in range(len(paras)):
-            if "<strong>" in str(paras[p]):
-                billTitles.append(paras[p])
+@dataclass
+class BillACT(Bill, BillMetaACT):
+    sponsor: str
+    bill_text_links: List[Dict]
+    bill_em_links: List[Dict]
+    scrutiny_report: PdfUrl
+    intro_speech: UrlStr
 
-            elif "y Report " in str(paras[p]) or "Statement" in str(paras[p]):
-                reports = paras[p].find_all('a', {'href': True})
-                urls = []
-                for report in range(len(reports)):
-                    urls.append(reports[report]['href'])
-                billScrutinyReports.append(urls)
-            
-            else:
-                billDescs.append(paras[p].text.replace('‑', '-'))
 
-        for bill in range(len(billTitles)):
-            _bill_title = self._format_presenter_8th(billTitles[bill].text)[0].replace('‑', '-')
-            _bill_presented_by = self._format_presenter_8th(billTitles[bill].text)[1].replace('‑', '-')
-            _bill_date = self._format_presenter_8th(billTitles[bill].text)[2].replace('‑', '-')
-            _bill_url = billTitles[bill].find('a')['href']
-            _bill_description = billDescs[bill].replace('‑', '-')
-            bill_dict = {TITLE: _bill_title, URL: _bill_url, DESCRIPTION: _bill_description, DATE: _bill_date, PRESENTED_BY: _bill_presented_by}
-            self._bills_data.append(bill_dict)
+class ACTBillObject(BillExtractor):
+    _bill_data = dict()
 
-    def _format_presenter_8th(self, title):
-        count = 0
-        formatted = []
+    def __init__(self, bill_meta: BillMetaACT):
+        self.bill_soup = self._download_html(bill_meta.link)
+        self.bill_meta_list = self.bill_soup.find('dl').find_all('dd')
+        self.url = bill_meta.link
+        if(len(self.bill_meta_list) is None):
+            raise self.ExtractorError(
+                f'Could not find extra bill metadata:\n\n{self.bill_meta_list}')
 
-        for char in title:
-            if char == '—':
-                count = count + 1
+    def _get_sponsor(self):
+        return self.bill_meta_list[1].text.strip()
 
-        if count > 2:
-            title = title.replace('—', ' - ', 1) # The bill https://www.legislation.act.gov.au/b/db_47854/default.asp contains an extra '—', this hacks around it. 
+    def _get_text_links(self):
+        urls = []
+        table = self.bill_soup.find(
+            'h3', {'tabindex': '0'}).findNext('table').find('tbody')
+        for index, entry in enumerate(table.find_all('tr')):
+            time = self._get_timestamp(
+                table.find_all('td')[1]['data-order'][:8], '%Y%m%d')
+            url = BASE_URL + entry.find(
+                'a', {'class': 'button download pdf'})['href']
 
-        splitUp = title.replace('\xa0', ' ').split('—', 2)
-        formatted.extend([splitUp[0], splitUp[1]])
-        if(splitUp[2][0] == ' '): # The Gaming Machine Amendment Bill 2013 (No. 2) contains a space before the "6" in its date (of course), so we need to do this, otherwise funky things happen.
-            edit = splitUp[2][1:]
-            splitUp.remove(splitUp[2])
-            splitUp.append(edit)
-        dateSplit = splitUp[2].split(' ', 2)
-        monthNum = list(calendar.month_name).index(dateSplit[1])
-        finalDate = dateSplit[2] + '-' + "{0:0=2d}".format(monthNum) + '-' + "{0:0=2d}".format(int(dateSplit[0]))
-        formatted.append(finalDate)
-        return(formatted)
+            urls.append({
+                '__time': time,
+                '__id': index,
+                'url': url,
+            })
+        return urls
 
-    @property
-    def data(self):
-        return(self._bills_data)
+    def _get_em_links(self):
+        urls = []
+        table = self.bill_soup.find(
+            'h3', {'tabindex': None}).findNext('table').find('tbody')
+        for index, row in enumerate(table.find_all('tr')):
+            time = self._get_timestamp(
+                table.find_all('td')[1]['data-order'][:8], '%Y%m%d')
+            url = BASE_URL + row.find(
+                'a', {'class': 'button download pdf'})['href']
+            urls.append({
+                '__time': time,
+                '__id': index,
+                'url': url,
+            })
+        return urls
 
-act_all_bills = All_Bills().data
+    def _get_scrutiny_link(self):
+        notes_col = self.bill_soup.find(
+            'h3', {'tabindex': '0'}).findNext(
+                'table').find('tbody').find('td', {'class': 'notes'})
+        if(notes_col is not None):
+            for a in notes_col.find_all('a'):
+                if(a.contents[0] == 'Scrutiny Committee report'):
+                    return a['href']
 
-class act_Bill(object):
-    def __init__(self, input):
-        if(isinstance(input, dict)):
-            try:
-                self.create_vars(input)
-            except Exception as e:
-                raise Exception('Dict must have the correct keys. Missing key '
-                                + str(e))
-        else:
-            raise TypeError('Input must be valid dict data.')
-    
-    
-    def create_vars(self, init_data):
-        self._bill_data = init_data
-        self.url = init_data[URL]
-        self.date = init_data[DATE]
-        self.title = init_data[TITLE]
-        self.description = init_data[DESCRIPTION]
-        self.presented_by = init_data[PRESENTED_BY]
-        try:
-            self.bill_soup = BeautifulSoup(requests.get(self.url).text, 'lxml')
-        except:
-            if(self.url == 'file:///%5C%5Cact.gov.au%5Cassembly%5Clasec%5CChamber%5CLA%20Secretariat%20%231%5CNOTICEPAPER%5CBills%5CSummary%20of%20Bills%5CEighth%20Assembly%5CThis%20bill%20will%20establish%20the%20legislative%20framework%20for%20the%20operation%20of%20a%20secure%20mental%20health%20facility%20in%20the%20ACT'):
-                self.url = 'https://www.legislation.act.gov.au/a/2011-35/'
-                self.bill_soup = BeautifulSoup(requests.get(self.url).text, 'lxml')
-            else:
-                raise Exception('Invalid bill URL, unable to scrape. ' + self.url)
+    def _get_speech_link(self):
+        notes_col = self.bill_soup.find(
+            'h3', {'tabindex': '0'}).findNext(
+                'table').find('tbody').find('td', {'class': 'notes'})
+        if(notes_col is not None):
+            for a in notes_col.find_all('a'):
+                if(a.contents[0] == 'Presentation speech'):
+                    return a['href']
 
-    @property
-    def bill_type(self):
-        return(self.get_bill_type())
 
-    def get_bill_type(self):
-        basic_data = self.bill_soup.find('dl')
-        try:
-            _billtype = basic_data.find_all('dd')
-        except:
-            return ''
-        return(_billtype[0].text)
+def get_bills_metadata() -> List[BillMetaACT]:
+    _all_bills = ACTBillList()._bill_list
+    _bill_meta_list = []
+    for bill_dict in _all_bills:
+        bill_meta = BillMetaACT(
+            parliament=Parliament.ACT.value,
+            title=bill_dict[TITLE],
+            link=bill_dict[URL],
+            has_passed=bill_dict[PASSED],
+            bill_type=bill_dict[BILL_TYPE],
+            passed_assembly=bill_dict[PASSED_ASSEMBLY],
+            intro_assembly=bill_dict[INTRO_ASSEMBLY],
+            id=bill_dict[ID]
+        )
+        _bill_meta_list.append(bill_meta)
+    return(_bill_meta_list)
 
-    @property
-    def status(self):
-        return(self.get_bill_status())
 
-    def get_bill_status(self):
-        basic_data = self.bill_soup.find('dl')
-        _billtype = basic_data.find_all('dd')
-        return(_billtype[2].text)
-
-    @property
-    def bill_text_url(self):
-        return(self.get_bill_text())
-
-    def get_bill_text(self):
-        try:
-            a = self.bill_soup.find('a', {'class', 'button viewable pdf'})
-            return('https://www.legislation.act.gov.au' + a['href'])
-        except:
-            return ''
-    
-    @property
-    def scrutiny_report(self):
-        return(self.get_scrutiny_report())
-
-    def get_scrutiny_report(self):
-        table = self.bill_soup.find('table', {'class': 'datatable display'})
-        td = table.find('td', {'class': 'notes'})
-        for a in td.find_all('a'):
-            if(not ' Scrutiny Committee' in a.text and 'Scrutiny Committee' in a.text):
-                scrutiny_url = a['href']
-        try:
-            return(scrutiny_url)
-        except:
-            return('')
-
-    @property
-    def presentation_speech(self):
-        table = self.bill_soup.find('table', {'class': 'datatable display'})
-        try:
-            td = table.find('td', {'class': 'notes'})
-            for a in td.find_all('a'):
-                if('Presentation speech' in a.text):
-                    speech_url = a['href']
-            try:
-                return(speech_url)
-            except:
-                return('')
-        except:
-            return ''
-
-    @property
-    def hansard(self):
-        table = self.bill_soup.find('table', {'class': 'datatable display'})
-        td = table.find('td', {'class': 'notes'})
-        for a in td.find_all('a'):
-            if('Hansard debate' in a.text):
-                hansard_url = a['href']
-        try:
-            return(hansard_url)
-        except:
-            return('')
-
-    @property
-    def explanatory_statement(self):
-        table = self.bill_soup.find_all('table', {'class': 'datatable display'})[1]
-        a = table.find('a')
-        try:
-            return('https://www.legislation.act.gov.au' + a['href'])
-        except:
-            return('')
-
-    @property
-    def compatibility_statement(self):
-        table = self.bill_soup.find_all('table', {'class': 'datatable display'})[2]
-        a = table.find('a')
-        try:
-            return('https://www.legislation.act.gov.au' + a['href'])
-        except:
-            return('')
-
-    @property
-    def data(self):
-        self._bill_data[URL] = self.url
-        self._bill_data[TITLE] = self.title
-        self._bill_data[DATE] = self.date
-        self._bill_data[DESCRIPTION] = self.description
-        self._bill_data[PRESENTED_BY] = self.presented_by
-        self._bill_data[TYPE] = self.bill_type
-        self._bill_data[STATUS] = self.status
-        self._bill_data[TEXT_URL] = self.bill_text_url
-        self._bill_data[SCRUTINY_REPORT] = self.scrutiny_report
-        self._bill_data[PRESENTATION_SPEECH] = self.presentation_speech
-        self._bill_data[HANSARD] = self.hansard
-        self._bill_data[EXPLANATORY_STATEMENT] = self.explanatory_statement
-        self._bill_data[COMPATIBILITY_STATEMENT] = self.compatibility_statement
-        return(self._bill_data)
+def get_bill(bill_meta: BillMetaACT) -> BillACT:
+    act_helper = ACTBillObject(bill_meta)
+    bill_act = BillACT(
+        **dataclasses.asdict(bill_meta),  # Copy metadata we already got as separate instance.
+        sponsor=act_helper._get_sponsor(),
+        bill_text_links=act_helper._get_text_links(),
+        bill_em_links=act_helper._get_em_links(),
+        intro_speech=act_helper._get_speech_link(),
+        scrutiny_report=act_helper._get_scrutiny_link()
+    )
+    return bill_act

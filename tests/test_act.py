@@ -1,24 +1,38 @@
-from ausbills.act_parliament import act_all_bills, act_Bill
+from ausbills.act_parliament import *
 import pytest
 import random
 import io
+import logging
 
-def test_act():
-    all_the_bills_mate = act_all_bills
-    random_numbers = [int(random.random()*len(all_the_bills_mate)) for i in range(5)]
-    bills_sample = [all_the_bills_mate[i] for i in random_numbers]
-    file = open('act_demo.txt', 'w')
+logging.basicConfig(level=logging.DEBUG)
 
-    file.write('Found ' + str(len(all_the_bills_mate)) + ' bills:\n\n')
-    for bill in bills_sample:
-        write_text = []
-        bill_data = act_Bill(bill)
-        write_text.append('Bill Title: ' + bill_data.title + ', ' + bill_data.date)
-        write_text.append('\nBill URL: ' + bill_data.url)
-        write_text.append('\nBill Text URL: ' + bill_data.bill_text_url)
-        write_text.append('\nBill Presentation Speech URL: ' + bill_data.presentation_speech)
-        write_text.append('\nBill Type: ' + bill_data.bill_type)
-        write_text.append('\nBill Presenter: ' + bill_data.presented_by)
-        for text in write_text:
-            file.writelines(text)
-        file.writelines('\n\n')
+@pytest.fixture
+def bills_meta_sample():
+    bills_metadata = get_bills_metadata()
+    random_numbers = [int(random.random()*len(bills_metadata)) for i in range(5)]
+    bills_meta_sample = [bills_metadata[i] for i in random_numbers]
+    return(bills_meta_sample)
+
+def test_get_bills_meta(bills_meta_sample):
+    for b_m in bills_meta_sample:
+        assert isinstance(b_m, BillMeta)
+        print("test_get_bills_meta: "+str(b_m))
+
+def test_get_bills(bills_meta_sample):
+    for b_m in bills_meta_sample:
+        assert isinstance(b_m, BillMeta)
+        bill_info = get_bill(b_m)
+        assert isinstance(bill_info, Bill)
+
+def test_bill_dict(bills_meta_sample):
+    for b_m in bills_meta_sample:
+        bill_info = get_bill(b_m)
+        b_dict =bill_info.asDict()
+        assert isinstance(b_dict, dict)
+        print("Bill Dict" + str(b_dict))
+
+def test_bill_json(bills_meta_sample):
+    for b_m in bills_meta_sample:
+        bill_info = get_bill(b_m)
+        b_json =bill_info.asJson()
+        assert isinstance(b_json, str)

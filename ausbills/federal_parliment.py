@@ -1,7 +1,7 @@
 from ausbills.models import BillMeta, Bill
-from .types_parliament import Parliament, House
+from .types import Parliament, House
 from dataclasses import dataclass
-from ausbills import types_parliament
+from ausbills import types
 import json
 
 
@@ -173,7 +173,6 @@ class DateString(str):
 
 @dataclass
 class BillMetaFed(BillMeta):
-    parliament: str
     house: str
     id: str
     intro_house: DateString
@@ -189,13 +188,17 @@ class BillMetaFed(BillMeta):
 @dataclass
 class BillFed(Bill, BillMetaFed):
     # Todo add state specific fields
+    text_link: str
     summary: str
+    sponsor: str
     portfolio: str
     bill_text_links: List[Dict]  # TODO need to make more general
     bill_em_links: List[Dict]  # TODO need to make more general
 
 # TODO need to discuss the general datestring for ausbills. I used YYYY-MM-DD
 
+# TODO king-millez: re ^ I think just using a datetime timestamp is the best,
+# TODO datetime has functions to convert timestamps to any format a user may want
 
 def dt_to_str(in_date, template="YYYY-MM-DD"):
     template

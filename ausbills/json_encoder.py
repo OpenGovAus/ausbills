@@ -8,7 +8,7 @@ from pymonad.maybe import Maybe
 from dataclasses import is_dataclass
 
 from .log import get_logger
-from .types_parliament import House
+from .types import House
 
 json_d = json.JSONEncoder.default
 log = get_logger(__file__)
