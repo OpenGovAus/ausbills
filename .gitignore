@@ -13,6 +13,7 @@ bill_data.json
 /env
 /lib64
 pyvenv.cfg
+example_exports/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

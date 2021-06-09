@@ -38,10 +38,10 @@ class ACTBillList(BillListExtractor):
             bill_id = bill_url[-6:-1]
 
             if has_passed:
-                prog_dict = {BillProgress.FIRST.value: True, BillProgress.ASSENTED.value: False}
+                prog_dict = {BillProgress.FIRST.value: True, BillProgress.ASSENTED.value: True}
                 chamber_progress = ChamberProgress.THIRD_READING.value
-            else:
-                prog_dict = {BillProgress.FIRST.value: False, BillProgress.ASSENTED.value: False}
+            else:        
+                prog_dict = {BillProgress.FIRST.value: True, BillProgress.ASSENTED.value: False} # Bills will always remain in the first house in a unicameral parliament
                 chamber_progress = ChamberProgress.FIRST_READING.value
 
             bill_list.append({

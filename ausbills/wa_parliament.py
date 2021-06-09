@@ -54,13 +54,13 @@ class WABillList(BillListExtractor):
             
     def _generate_prog(self, legend):
         if legend[0] == 'lc' and legend[1] == 'lc2':
-            return {BillProgress.FIRST.value: False, BillProgress.SECOND.value: False, BillProgress.ASSENTED.value: False}
-        elif legend[0] == 'lc' and legend[1] == 'la2':
             return {BillProgress.FIRST.value: False, BillProgress.SECOND.value: True, BillProgress.ASSENTED.value: False}
+        elif legend[0] == 'lc' and legend[1] == 'la2':
+            return {BillProgress.FIRST.value: True, BillProgress.SECOND.value: True, BillProgress.ASSENTED.value: False}
         elif legend[0] == 'la' and legend[1] == 'lc2':
-            return {BillProgress.FIRST.value: True, BillProgress.SECOND.value: False, BillProgress.ASSENTED.value: False}        
+            return {BillProgress.FIRST.value: True, BillProgress.SECOND.value: True, BillProgress.ASSENTED.value: False}        
         else:
-            return {BillProgress.FIRST.value: False, BillProgress.SECOND.value: False, BillProgress.ASSENTED.value: False}
+            return {BillProgress.FIRST.value: True, BillProgress.SECOND.value: False, BillProgress.ASSENTED.value: False}
     def _get_col_date(self, row):
         return self._get_timestamp(row.text.strip().split('- ')[-1], '%d %b %Y')
 
