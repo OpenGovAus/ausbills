@@ -13,6 +13,7 @@ from pymonad.maybe import Maybe, Nothing, Just
 
 from ausbills.json_encoder import AusBillsJsonEncoder
 from ausbills.log import get_logger
+from ausbills.util.consts import * 
 from typing import List, Dict
 
 log = get_logger(__file__)
@@ -20,26 +21,6 @@ log = get_logger(__file__)
 
 DATE_FMT = "%{0}d/%{0}m/%y".format('')
 
-CHAMBER = "chamber"
-SHORT_TITLE = "short_title"
-INTRO_HOUSE = "intro_house"
-PASSED_HOUSE = "passed_house"
-INTRO_SENATE = "intro_senate"
-PASSED_SENATE = "passed_senate"
-ASSENT_DATE = "assent_date"
-URL = "url"
-ACT_NO = "act_no"
-DOC = "doc"
-PDF = "pdf"
-HTML = "html"
-SUMMARY = "summary"
-SPONSOR = "sponsor"
-PORTFOLIO = "portfolio"
-TEXT_LINK = "text_link"
-EM_LINK = "em_link"
-ID = "id"
-CURRENT_READING = "current_reading"
-READINGS = "readings"
 bills_legislation_url = "https://www.aph.gov.au/Parliamentary_Business/Bills_Legislation/Bills_Lists/Details_page" \
                         "?blsId=legislation%2fbillslst%2fbillslst_c203aa1c-1876-41a8-bc76-1de328bdb726"
 
@@ -192,7 +173,6 @@ class BillFed(Bill, BillMetaFed):
     summary: str
     sponsor: str
     portfolio: str
-    bill_text_links: List[Dict]  # TODO need to make more general
     bill_em_links: List[Dict]  # TODO need to make more general
 
 # TODO need to discuss the general datestring for ausbills. I used YYYY-MM-DD

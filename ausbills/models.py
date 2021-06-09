@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import NewType
+from typing import Dict, List, NewType
 from .types import Parliament, House
 import json
 
@@ -18,6 +18,9 @@ class BillMeta:
 class Bill:
     title: str
     link: UrlStr
+    progress: Dict
+    chamber_progress: int
+    bill_text_links: List[Dict]
 
     def asDict(self) -> dict:
         return(self.__dict__)

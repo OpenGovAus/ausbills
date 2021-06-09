@@ -4,16 +4,8 @@ from typing import Dict, List
 
 from ausbills.models import BillMeta, Bill, PdfUrl, UrlStr
 from ausbills.util import BillExtractor, BillListExtractor
-from ausbills.types import Parliament, BillTypes
-
-
-TITLE = 'title'
-PASSED = 'passed'
-URL = 'url'
-INTRO_ASSEMBLY = 'intro_assembly'
-PASSED_ASSEMBLY = 'passed_assembly'
-BILL_TYPE = 'bill_type'
-ID = 'id'
+from ausbills.types import BillProgress, Parliament, BillTypes, ChamberProgress
+from ausbills.util.consts import *
 
 BASE_URL = 'https://legislation.act.gov.au'
 
@@ -45,13 +37,21 @@ class ACTBillList(BillListExtractor):
             bill_type = self._parse_type(row.find_all('td')[2].text)
             bill_id = bill_url[-6:-1]
 
+            if has_passed:
+                prog_dict = {BillProgress.FIRST.value: True, BillProgress.ASSENTED.value: False}
+                chamber_progress = ChamberProgress.THIRD_READING.value
+            else:
+                prog_dict = {BillProgress.FIRST.value: False, BillProgress.ASSENTED.value: False}
+                chamber_progress = ChamberProgress.FIRST_READING.value
+
             bill_list.append({
                 TITLE: bill_title,
                 URL: bill_url,
                 BILL_TYPE: bill_type,
                 INTRO_ASSEMBLY: bill_intro,
                 PASSED_ASSEMBLY: passed_date,
-                PASSED: has_passed,
+                PASSED: prog_dict,
+                CHAMBER_PROGRESS: chamber_progress,
                 ID: bill_id,
             })
         return bill_list
@@ -65,17 +65,17 @@ class ACTBillList(BillListExtractor):
 
 @dataclass
 class BillMetaACT(BillMeta):
-    has_passed: bool
     bill_type: str
     passed_assembly: int
     intro_assembly: int
+    progress: Dict
+    chamber_progress: int
     id: int
 
 
 @dataclass
 class BillACT(Bill, BillMetaACT):
     sponsor: str
-    bill_text_links: List[Dict]
     bill_em_links: List[Dict]
     scrutiny_report: PdfUrl
     intro_speech: UrlStr
@@ -125,6 +125,7 @@ class ACTBillObject(BillExtractor):
                 '__time': time,
                 '__id': index,
                 'url': url,
+                'house': BillProgress.FIRST.value,
             })
         return urls
 
@@ -153,13 +154,14 @@ def get_bills_metadata() -> List[BillMetaACT]:
     for bill_dict in _all_bills:
         bill_meta = BillMetaACT(
             parliament=Parliament.ACT.value,
+            progress=bill_dict[PASSED],
             title=bill_dict[TITLE],
             link=bill_dict[URL],
-            has_passed=bill_dict[PASSED],
             bill_type=bill_dict[BILL_TYPE],
             passed_assembly=bill_dict[PASSED_ASSEMBLY],
             intro_assembly=bill_dict[INTRO_ASSEMBLY],
-            id=bill_dict[ID]
+            id=bill_dict[ID],
+            chamber_progress=bill_dict[CHAMBER_PROGRESS]
         )
         _bill_meta_list.append(bill_meta)
     return(_bill_meta_list)
