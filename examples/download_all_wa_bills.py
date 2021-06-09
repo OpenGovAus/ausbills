@@ -2,14 +2,12 @@ import json
 import os
 import sys
 
-from ausbills.wa_parliament import *
+from ausbills.parliament.wa import *
 
 FILEPATH = os.path.dirname(os.path.realpath(__file__)) + '/example_exports/'
 
 def main():
-    bill_list = []
-    for bill in get_bills_metadata():
-        bill_list.append(get_bill(bill).asDict())
+    bill_list = [get_bill(bill).asDict() for bill in get_bills_metadata()]
 
     with open(FILEPATH + 'wa_bills.json', 'w') as f:
         f.write(json.dumps(bill_list, indent=2))

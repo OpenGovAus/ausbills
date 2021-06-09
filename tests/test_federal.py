@@ -1,4 +1,4 @@
-from ausbills.federal_parliment import get_all_bills, get_bills_metadata, get_bill
+from ausbills.parliament.federal import get_all_bills, get_bills_metadata, get_bill
 import datetime
 import random
 from ausbills.models import BillMeta, Bill

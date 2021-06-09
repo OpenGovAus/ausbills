@@ -97,8 +97,19 @@ class WABillHelper(BillExtractor):
     _bill_data = dict()
 
     def __init__(self, bill_meta: BillMetaWA):
+        self.url = bill_meta.link
         self.bill_soup = self._download_html(bill_meta.link, verify=False)
         self.table = self.bill_soup.find_all('table')
+
+    def __str__(self):
+        return f"<Bill | URL: '{self.url}'>"
+
+    def __repr__(self):
+        return ('<{}.{} : {} object at {}>'.format(
+            self.__class__.__module__,
+            self.__class__.__name__,
+            self.url.split('=')[-1],
+            hex(id(self))))
 
     def _get_bill_no(self):
         return int(self.table[0].find_all(

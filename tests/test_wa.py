@@ -1,4 +1,4 @@
-from ausbills.wa_parliament import *
+from ausbills.parliament.wa import *
 import pytest
 import random
 import io

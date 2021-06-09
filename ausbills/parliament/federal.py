@@ -1,7 +1,7 @@
+from ausbills.util import BillExtractor
 from ausbills.models import BillMeta, Bill
-from .types import Parliament, House
+from ..types import BillProgress, ChamberProgress, Parliament
 from dataclasses import dataclass
-from ausbills import types
 import json
 
 
@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup, ResultSet
 import requests
 import datetime
 
-from pymonad.maybe import Maybe, Nothing, Just
+from pymonad.maybe import Maybe
 
 from ausbills.json_encoder import AusBillsJsonEncoder
 from ausbills.log import get_logger
@@ -218,7 +218,7 @@ def get_bills_metadata() -> List[BillMetaFed]:
     return(_bill_meta_list)
 
 
-class BillFedHelper:
+class BillFedHelper(BillExtractor):
     _bill_data = dict()
 
     def __init__(self, bill_meta: BillMetaFed):
@@ -228,11 +228,11 @@ class BillFedHelper:
         self.intro_house = bill_meta.intro_house
         self.passed_house = bill_meta.passed_house
         self.intro_senate = bill_meta.intro_senate
-        self.passed_house = bill_meta.passed_senate
+        self.passed_senate = bill_meta.passed_senate
         self.assent_date = bill_meta.assent_date
         self.act_no = bill_meta.act_no
         self.bill_url = requests.get(self.url).text
-        self.bill_soup = BeautifulSoup(self.bill_url, 'lxml')
+        self.bill_soup = self._download_html(self.url)
 
     def __str__(self):
         return f"<Bill | URL: '{self.url}'>"
@@ -366,6 +366,51 @@ class BillFedHelper:
     def to_json(self) -> str:
         return json.dumps(self._bill_data, cls=AusBillsJsonEncoder)
 
+    @property
+    def chamber_progress(self):
+        return self.get_chamber_progress()
+    
+    def get_chamber_progress(self):
+        if len(self.passed_senate) > 0 and len(self.passed_house) > 0:
+            _prog_dict = {
+                BillProgress.FIRST.value: True,
+                BillProgress.SECOND.value: True,
+                BillProgress.ASSENTED.value: True
+            }
+        else:
+            _prog_dict = None
+        _house_timestamp = 0
+        _senate_timestamp = 0
+        if len(self.intro_house) > 0:
+            _house_timestamp = self._get_timestamp(self.intro_house, '%Y-%m-%d')
+        if len(self.intro_senate) > 0:
+            _senate_timestamp = self._get_timestamp(self.intro_senate, '%Y-%m-%d')
+        
+        if _house_timestamp > _senate_timestamp:
+            _chamber = 'House of Representatives'
+            if _prog_dict is None:
+                _prog_dict = {BillProgress.FIRST.value: True, BillProgress.SECOND.value: True, BillProgress.ASSENTED.value: False}
+                if _senate_timestamp == 0:
+                    _prog_dict[BillProgress.SECOND.value] = False
+        else:
+            _chamber = 'Senate'
+            if _prog_dict is None:
+                _prog_dict = {BillProgress.FIRST.value: True, BillProgress.SECOND.value: True, BillProgress.ASSENTED.value: False}
+                if _house_timestamp == 0:
+                    _prog_dict[BillProgress.FIRST.value] = False
+        
+        stage_text = self.bill_soup.find_all('th', string=_chamber)[0].parent.parent.parent.find('tbody').find_all('tr')[-1].text.strip()
+        if 'First' in stage_text:
+            _reading = ChamberProgress.FIRST_READING.value
+        elif 'Second' in stage_text or 'Referred' in stage_text or 'Restored' in stage_text:
+            _reading = ChamberProgress.SECOND_READING.value
+        elif 'Third' in stage_text:
+            _reading = ChamberProgress.THIRD_READING.value
+        else:
+            log.warning('Could not identify reading stage, using second; \n' + stage_text)
+            _reading = ChamberProgress.SECOND_READING.value
+
+        return [_reading, _prog_dict]
 
 ############### NEW #######################
 
@@ -381,10 +426,11 @@ def get_bill(bill_meta: BillMetaFed) -> BillFed:
         Note: use BillFed.asDict() and BillFed.asJson() to get the data
     """
     fed_helper: BillFedHelper = BillFedHelper(bill_meta)
+    progdata = fed_helper.chamber_progress
     bill_fed = BillFed(
         title=bill_meta.title,
         link=bill_meta.link,
-        sponsor=fed_helper.sponsor if fed_helper.sponsor !="" else fed_helper.portfolio,
+        sponsor=fed_helper.sponsor if fed_helper.sponsor != "" else fed_helper.portfolio,
         text_link=fed_helper.data[CURRENT_READING],
         # From bill_meta
         parliament=str(bill_meta.parliament),
@@ -401,5 +447,7 @@ def get_bill(bill_meta: BillMetaFed) -> BillFed:
         portfolio=fed_helper.portfolio,
         bill_text_links=fed_helper.bill_text_links,
         bill_em_links=fed_helper.explanatory_memoranda_links,
+        progress=progdata[1],
+        chamber_progress=progdata[0],
     )
     return(bill_fed)

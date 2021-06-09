@@ -92,6 +92,16 @@ class ACTBillObject(BillExtractor):
             raise self.ExtractorError(
                 f'Could not find extra bill metadata:\n\n{self.bill_meta_list}')
 
+    def __str__(self):
+        return f"<Bill | URL: '{self.url}'>"
+
+    def __repr__(self):
+        return ('<{}.{} : {} object at {}>'.format(
+            self.__class__.__module__,
+            self.__class__.__name__,
+            self.url.split('=')[-1],
+            hex(id(self))))
+
     def _get_sponsor(self):
         return self.bill_meta_list[1].text.strip()
 
