@@ -12,7 +12,7 @@ pip3 install ausbills
 
 ## Usage
 
-#### _All parliaments extractors must use the same output template, which can be found [here](ausbills/models.py)._
+#### _All parliaments' extractors must use the same output template, which can be found [here](ausbills/models.py)._
 
 Most parliaments host their bills online in 2 forms:
 
@@ -40,7 +40,7 @@ from ausbills.parliament.act import get_bills_metadata, get_bill
 print(get_bills_metadata())
 ```
 
-This is nice, but we can see from the previous screenshots that there is more data that can be obtained, which can be done by using the `get_bill` function's `dict or `JSON` return functions:
+This is nice, but we can see from the previous screenshots that there is more data that can be obtained, which can be done by using the `get_bill` function's `dict` or `JSON` return functions:
 
 ```py
 # Get the full metadata from a random ACT bill:
