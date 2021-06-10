@@ -1,7 +1,6 @@
 import logging
 
-logging.basicConfig(level=logging.INFO)
 
-
-def get_logger(name: str) -> logging.Logger:
+def get_logger(name: str, level=logging.WARNING) -> logging.Logger:
+    logging.basicConfig(level=level)
     return logging.Logger(name=name)

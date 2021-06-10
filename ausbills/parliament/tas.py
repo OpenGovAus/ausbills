@@ -1,206 +1,184 @@
-from datetime import datetime
-from requests import get
-from bs4 import BeautifulSoup
+from dataclasses import dataclass
+import dataclasses
+from typing import Dict, List
 
-current_year = datetime.today().year
-url_split = ['https://www.parliament.tas.gov.au/bill/Bills', '/BillWeb', '.html']
+from ausbills.util.consts import *
+from ausbills.util import BillExtractor, BillListExtractor
 
-URL = 'url'
-TITLE = 'title'
-YEAR = 'year'
-PASSED_LOWER = 'passed_lower'
-PASSED_UPPER = 'passed_upper'
-SPONSOR = 'sponsor'
-BILL_TEXT_URL = 'bill_text_url'
-WAS_AMENDED_UPPER = 'was_amended_upper'
-WAS_AMENDED_LOWER = 'was_amended_lower'
-ASSENTED = 'assented'
-ACT_NO = 'act_no'
-LOWER_FIRST_READING = 'lower_first_reading'
-LOWER_SECOND_READING = 'lower_second_reading'
-LOWER_THIRD_READING = 'lower_third_reading'
-UPPER_FIRST_READING = 'upper_first_reading'
-UPPER_SECOND_READING = 'upper_second_reading'
-UPPER_THIRD_READING = 'upper_third_reading'
+from ausbills.types import BillProgress, ChamberProgress, House, Parliament
+from ausbills.log import get_logger
+from ausbills.models import Bill, BillMeta
 
-class tas_All_Bills(object):
-    _bills_data = []
+DOMAIN = 'https://www.parliament.tas.gov.au'
+BASE_URL = DOMAIN + '/Bills/current/'
 
-    def __init__(self):
-        try:
-            self.create_dataset()
-        except:
-            raise Exception('Error when scraping bills...')
+tas_logger = get_logger(__file__)
 
-    def create_dataset(self):
-        for year in range(current_year - (current_year - 2002), current_year + 1):
-            bills_url = url_split[0] + str(year) + url_split[1] + str(year) + url_split[2]
-            soup = BeautifulSoup(get(bills_url).text, 'lxml')
-            table = soup.find('table', {'class': 'ui table'})
-            bills = table.find_all('a')
-            _bill_urls = []
-            _bill_titles = []
-            for bill in bills:
-                _bill_titles.append(bill.text.strip())
-                _bill_urls.append(url_split[0] + str(year) + '/' + bill['href'])
-            for bill in range(len(_bill_titles)):
-                bill_dict = {URL: _bill_urls[bill], TITLE: _bill_titles[bill], YEAR: str(year)}
-                self._bills_data.append(bill_dict)
-
+class TasBillList(BillListExtractor):
     @property
-    def data(self):
-        return(self._bills_data)
+    def all_bills(self):
+        return self._get_bills()
     
-tas_all_bills = tas_All_Bills().data
+    def _get_bills(self):
+        bill_list = []
+        table = self._download_html(BASE_URL + 'BillWeb.html').find('table', {'class': 'ui table'}).find('tbody')
+        for row in table.find_all('tr'):
+            bill_title = row.find('a').text
+            #bill_num =
+            __base_str = row.find('td').contents[-1][2:-1].split(' of ')
+            bill_num = f'{__base_str[1]}_{__base_str[0]}'
+            bill_url = BASE_URL + row.find('a')['href']
+            bill_list.append({
+                TITLE: bill_title,
+                URL: bill_url,
+                ID: bill_num,
+            })
+        return bill_list
+    
+@dataclass
+class BillMetaTas(BillMeta):
+    id: str
 
-class tas_Bill(object):
-    def __init__(self, input):
-        if(isinstance(input, dict)):
-            try:
-                self.create_vars(input)
-            except Exception as e:
-                raise Exception('Dict must have correct keys, missing key ' + e)
-        else:
-            raise ValueError('Input data must be valid tas_Bill dict data...')
-    
-    def create_vars(self, init_data):
-        self._bill_data = init_data
-        self.url = init_data[URL]
-        self.title = init_data[TITLE]
-        try:
-            self.bill_soup = BeautifulSoup(get(self.url).text, 'lxml')
-            table = self.bill_soup.find('table', {'class': 'ui celled fixed table'})
-            self._rows = table.find_all('tr')
-        except:
-            raise Exception('Unable to scrape ' + self.url)
-        self.get_first_readings()
-        self.get_second_readings()
-        self.get_third_readings()
+def get_bills_metadata():
+    compiled_list = []
+    all_bills = TasBillList().all_bills
+    for bill_dict in all_bills:
+        compiled_list.append(BillMetaTas(
+            title=bill_dict[TITLE],
+            parliament=Parliament.TAS.value,
+            link=bill_dict[URL],
+            id=bill_dict[ID],
+        ))
+    return compiled_list
+
+class TasBillHelper(BillExtractor):
+    def __init__(self, bill_meta: BillMetaTas):
+        self.url = bill_meta.link
+        self.bill_soup = self._download_html(self.url)
+
+    def __str__(self):
+        return f"<Bill | URL: '{self.url}'>"
+
+    def __repr__(self):
+        return ('<{}.{} : {} object at {}>'.format(
+            self.__class__.__module__,
+            self.__class__.__name__,
+            self.url.split('current/')[-1].replace('.html', ''),
+            hex(id(self))))
 
     @property
     def sponsor(self):
-        try:
-            div = self.bill_soup.find('div', {'class': 'ui blue segment'})
-        except:
-            raise Exception('Couldn\'t find the header information for %s.' % (self.url))
-        try:
-            return(div.find_all('p')[1].text.replace('Introduced by: ', '').strip())
-        except:
-            return ''
-
-    @property
-    def bill_text_url(self):
-        try:
-            return(url_split[0][:-11] + self.bill_soup.find('a', text='Text of Bill as introduced')['href'])
-        except:
-            return ''
-
-    @property
-    def was_amended_upper(self):
-        return(self.amended_check()[1])
+        return self.__get_sponsor()
     
-    @property
-    def was_amended_lower(self):
-        return(self.amended_check()[0])
+    def __get_sponsor(self):
+        return self.bill_soup.find('div', {'class': 'ui blue segment'}).find('h2').findNext('p').text.split('Introduced by: ')[-1]
 
     @property
-    def lower_committee(self):
-        column = self._rows[5].find_all('td')[1]
-        if column.text:
-            return(self.format_date(column.text))
-        else:
-            return ''
+    def parl_progress(self):
+        return self.__get_progress()
     
-    @property
-    def upper_committee(self):
-        column = self._rows[5].find_all('td')[3]
-        if column.text:
-            return(self.format_date(column.text))
-        else:
-            return ''
-
-    @property
-    def assented(self):
-        try:
-            column = self._rows[10].find_all('td')[1]
-            return(self.format_date(column.text))
-        except:
-            return ''
-
-    @property
-    def act_no(self):
-        try:
-            return(self._rows[10].find_all('td')[-1].text.strip())
-        except:
-            return ''
-
-    def amended_check(self):
-        columns = self._rows[7].find_all('td')
-        lower = columns[1].text.strip()
-        upper = columns[3].text.strip()
-        if(lower == 'Yes'):
-            lower = True
-        else:
-            lower = False
-
-        if(upper == 'Yes'):
-            upper = True
-        else:
-            upper = False
-        return[lower, upper]
-
-    def get_first_readings(self):
-        columns = self._rows[1].find_all('td')
-        try:
-            self.lower_first_reading = self.format_date(columns[1].text.strip())
-        except:
-            self.lower_first_reading = ''
-
-        try:
-            self.upper_first_reading = self.format_date(columns[3].text.strip())
-        except:
-            self.upper_first_reading = ''
-
-    def get_second_readings(self):
-        columns = self._rows[3].find_all('td')
-        try:
-            self.lower_second_reading = self.format_date(columns[1].text.strip())
-        except:
-            self.lower_second_reading = ''
+    def __get_progress(self):
+        def __get_table(index):
+            return divtable.find_all('table')[index].find('tbody')
         
-        try:
-            self.upper_second_reading = self.format_date(columns[3].text.strip())
-        except:
-            self.upper_second_reading = ''
+        def __get_first_reading(table):
+            return __check_date(table.find('tr'))
 
-    def get_third_readings(self):
-        columns = self._rows[8].find_all('td')
-        try:
-            self.lower_third_reading = self.format_date(columns[1].text.strip())
-        except:
-            self.lower_third_reading = ''
-        
-        try:
-            self.upper_third_reading = self.format_date(columns[3].text.strip())
-        except:
-            self.upper_third_reading = ''
+        def __check_date(row):
+            col = row.find_all('td')[-1]
+            if not len(col.text.strip()) > 0:
+                return 0
+            else:
+                return self._get_timestamp(col.text.strip(), '%d/%m/%Y')
 
-    def format_date(self, input_date):
-        dateSplit = input_date.split('/', 2)
-        return("{:0>2s}".format(dateSplit[0]) + '-' "{:0>2s}".format(dateSplit[1]) + '-' + dateSplit[2])
+        def __recent_reading(table):
+            third_reading = self.bill_soup.find_all('tr')[-2]
+            second_reading = self.bill_soup.find_all('tr')[2]
+            if __check_date(third_reading) > 0:
+                return ChamberProgress.THIRD_READING.value
+            elif __check_date(second_reading) > 0:
+                return ChamberProgress.THIRD_READING.value
+            else:
+                return ChamberProgress.FIRST_READING.value
+
+
+        divtable = self.bill_soup.find('div', {'class': 'ui two column stackable grid'})
+        self._ha_table = __get_first_reading(__get_table(0))
+        self._lc_table = __get_first_reading(__get_table(-1))
+
+        # Getting the bill's chamber progress:
+        prog_dict = {
+            BillProgress.FIRST.value: True,
+            BillProgress.SECOND.value: True,
+            BillProgress.ASSENTED.value: False
+        }
+        if self._ha_table > self._lc_table:
+            # Tabled in the House of Assembly most recently
+            if self._lc_table == 0: # If the bill has never been read in the LC:
+                prog_dict[BillProgress.SECOND.value] = False
+            reading = __recent_reading(self._ha_table)
+        else:
+            # Tabled in the Legislative Council most recently
+            if self._ha_table == 0: # If the bill has never been read in the HA:
+                prog_dict[BillProgress.FIRST.value] = False
+            reading = __recent_reading(self._lc_table)
+        return [reading, prog_dict]
 
     @property
-    def data(self):
-        self._bill_data[LOWER_FIRST_READING] = self.lower_first_reading
-        self._bill_data[LOWER_SECOND_READING] = self.lower_second_reading
-        self._bill_data[LOWER_THIRD_READING] = self.lower_third_reading
-        self._bill_data[UPPER_FIRST_READING] = self.upper_first_reading
-        self._bill_data[UPPER_SECOND_READING] = self.upper_second_reading
-        self._bill_data[UPPER_THIRD_READING] = self.upper_third_reading
-        self._bill_data[SPONSOR] = self.sponsor
-        self._bill_data[BILL_TEXT_URL] = self.bill_text_url
-        self._bill_data[ASSENTED] = self.assented
-        self._bill_data[WAS_AMENDED_LOWER] = self.was_amended_lower
-        self._bill_data[WAS_AMENDED_UPPER] = self.was_amended_upper
-        self._bill_data[ACT_NO] = self.act_no
-        return(self._bill_data)
+    def text_links(self):
+        return self.__get_text_links()
+
+    def __get_text_links(self):
+        div = self.bill_soup.find('div', {'class': 'ui blue segment'})
+        intro_text = div.find('a')
+        if self._ha_table > self._lc_table or self._lc_table == 0:
+            house = House.LOWER.value
+            time = self._ha_table
+        else:
+            house = House.UPPER.value
+            time = self._lc_table
+        return [{
+            API_ID: 0,
+            API_TIME: time,
+            API_HOUSE: house,
+            URL: DOMAIN + intro_text['href']
+        }]
+
+    @property
+    def em_links(self):
+        return self.__get_em_links()
+    
+    def __get_em_links(self):
+        em_list = []
+        div = self.bill_soup.find('div', {'class': 'ui three column grid'})
+        ems = div.find_all('div', {'class': 'ui column'})[1:]
+        for index,em in enumerate(ems):
+            try:
+                em_url = DOMAIN + em.find('a')['href'].replace(' ', '%20')
+            except Exception as e:
+                index -= 1
+                continue
+
+            em_list.append({
+                API_ID: index,
+                API_HOUSE: House.LOWER.value,
+                URL: em_url
+            })
+        return em_list
+
+
+@dataclass
+class BillTas(Bill, BillMetaTas):
+    sponsor: str
+    bill_em_links: List[Dict]
+
+def get_bill(bill_meta: BillMetaTas) -> BillTas:
+    tas_helper = TasBillHelper(bill_meta)
+    return BillTas(
+        **dataclasses.asdict(bill_meta),
+        sponsor=tas_helper.sponsor,
+        progress=tas_helper.parl_progress[1],
+        chamber_progress=tas_helper.parl_progress[0],
+        bill_text_links=tas_helper.text_links,
+        bill_em_links=tas_helper.em_links
+    )

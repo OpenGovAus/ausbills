@@ -108,7 +108,7 @@ class WABillHelper(BillExtractor):
         return ('<{}.{} : {} object at {}>'.format(
             self.__class__.__module__,
             self.__class__.__name__,
-            self.url.split('=')[-1],
+            self._get_bill_no(),
             hex(id(self))))
 
     def _get_bill_no(self):

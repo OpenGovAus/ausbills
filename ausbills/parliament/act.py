@@ -99,7 +99,7 @@ class ACTBillObject(BillExtractor):
         return ('<{}.{} : {} object at {}>'.format(
             self.__class__.__module__,
             self.__class__.__name__,
-            self.url.split('=')[-1],
+            self.url.split('/b/')[-1].replace('/', ''),
             hex(id(self))))
 
     def _get_sponsor(self):
