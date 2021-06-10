@@ -272,9 +272,8 @@ class BillFedHelper(BillExtractor):
         if div:
             for span_tag in div.find_all('span'):
                 span_tag.unwrap()
-            return div.p.text
             summary = div.p.text.replace('\n', '').replace('    ', '').replace(
-                '\r', '').replace('\u2014\u0080\u0094', ' ').replace('\u00a0', ',').replace('$', 'AUD ')
+                '\r', '').replace('\u2014\u0080\u0094', ' ').replace('\u00a0', ',').replace('$', 'AUD ').strip()
         else:
             summary = ""
         return summary
