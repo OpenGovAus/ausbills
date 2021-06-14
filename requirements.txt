@@ -8,3 +8,5 @@ six
 setuptools
 python-slugify
 urlpath
+flake8
+poetry

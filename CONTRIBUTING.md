@@ -145,3 +145,11 @@ To add a parliament that isn't supported by `ausbills` by using its functionalit
         )
         return bill_act
     ```
+
+13. Check and format your code with `flake8` (it should be included with `ausbills`'s dependencies).
+
+    ```sh
+    flake8 ausbills/parliament/scotland.py
+    ```
+
+    This should print any code standard errors (like long lines or unused imports) that should be fixed before creating a Pull Request.
