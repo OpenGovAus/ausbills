@@ -1,19 +1,15 @@
-*demo*.txt
 .venv/
 .vscode/
 .idea/
 *.tmp.json
 *.tmp
 *.log
-wa_bills_out_*
 __pycache__
-wa_bills_out
-bill_data.json
 /bin
 /env
 /lib64
 pyvenv.cfg
-example_exports/
+poetry.lock
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
