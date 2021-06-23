@@ -62,7 +62,7 @@ class WABillList(BillListExtractor):
         else:
             return {BillProgress.FIRST.value: True, BillProgress.SECOND.value: False, BillProgress.ASSENTED.value: False}
     def _get_col_date(self, row):
-        return self._get_timestamp(row.text.strip().split('- ')[-1], '%d %b %Y')
+        return self._get_timestamp(row.text.strip().split('- ')[-1].strip(), '%d %b %Y')
 
 
 def get_bills_metadata() -> List[BillMetaWA]:
