@@ -3,7 +3,7 @@ import pytest
 import random
 import io
 import logging
-'''
+
 logging.basicConfig(level=logging.DEBUG)
 
 @pytest.fixture
@@ -36,7 +36,3 @@ def test_bill_json(bills_meta_sample):
         bill_info = get_bill(b_m)
         b_json =bill_info.asJson()
         assert isinstance(b_json, str)
-'''
-
-def test_qld():
-    pass
