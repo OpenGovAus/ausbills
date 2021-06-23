@@ -1,6 +1,6 @@
 from ausbills.util import BillExtractor
 from ausbills.models import BillMeta, Bill
-from ..types import BillProgress, ChamberProgress, Parliament
+from ausbills.types import BillProgress, ChamberProgress, Parliament
 from dataclasses import dataclass
 import json
 
