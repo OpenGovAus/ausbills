@@ -283,7 +283,7 @@ class BillFedHelper(BillExtractor):
                            PDF: '',
                            HTML: ''}
         all_texts = []
-        tr_code = 'main_0_textOfBillReadingControl_readingItemRepeater_trFirstReading1_'
+        tr_code = 'main_0_textOfBillReadingControl_readingItemRepeater_trFirstReading1_0'
         for code_n in range(3):
             try:
                 tr = self.bill_soup.find(
