@@ -358,8 +358,12 @@ class BillFedHelper(BillExtractor):
                     self._bill_data[TEXT_LINK + '_' +
                                     TEXT] = self.bill_text_links[reading][TEXT]
                     self._bill_data[CURRENT_READING] = reading
-            self._bill_data[EM_LINK + '_' +
-                            TEXT] = self.explanatory_memoranda_links[TEXT]
+            try:
+                self._bill_data[EM_LINK + '_' +
+                                TEXT] = self.explanatory_memoranda_links[TEXT]
+            except Exception:
+                self._bill_data[EM_LINK + '_' +
+                                TEXT] = ''
         return self._bill_data
 
     def to_json(self) -> str:
