@@ -112,8 +112,8 @@ class WABillHelper(BillExtractor):
             hex(id(self))))
 
     def _get_bill_no(self):
-        return int(self.table[0].find_all(
-            'tr')[1].find_all('td')[-1].text.strip())
+        return self.table[0].find_all(
+            'tr')[1].find_all('td')[-1].text.strip().replace('-', '.')
 
     def _get_summary(self):
         return self.table[0].find_all('tr')[2].find_all('td')[1].text.strip().replace('\n', ' ')
