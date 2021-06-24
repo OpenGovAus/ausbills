@@ -1,93 +1,147 @@
-from requests import get
-from bs4 import BeautifulSoup
+import dataclasses
+from dataclasses import dataclass
 
-bill_list_urls = ['https://legislation.sa.gov.au/listBills.aspx?key=', 'https://legislation.sa.gov.au/listAZBills.aspx?key=']
-sa_base_url = 'https://legislation.sa.gov.au/'
+from typing import List
 
-URL = 'url'
-SHORT_TITLE = 'short_title'
-SPONSOR = 'sponsor'
-TEXTS = 'texts'
+from ausbills.util.consts import *
+from ausbills.util import BillExtractor, BillListExtractor
+from ausbills.models import Bill, BillMeta
+from ausbills.types import House, Parliament, BillProgress, ChamberProgress
 
-class sa_All_Bills(object):
-    _bills_data = []
+BASE = 'https://www.legislation.sa.gov.au/'
 
-    def __init__(self):
-        try:
-            self.create_dataset()
-        except:
-            raise Exception('An error ocurred when trying to scrape bills...')
-    
-    def create_dataset(self):
-        _bill_titles = []
-        _bill_urls = []
-        for list_url in bill_list_urls:
-            table = BeautifulSoup(get(list_url).text, 'lxml').find('table', {'summary': 'A List of the various versions of this Bills beginning with this letter'}).find('tbody')
-            for row in table.find_all('tr'):
-                _bill_urls.append(sa_base_url + row.find('a')['href'].replace(' ', '%20'))
-                _bill_titles.append(row.find('a').text.replace('\n', '').replace('\r', ' ').replace('\xa0', ' ').replace('  ', ' '))
-        for bill in range(len(_bill_titles)):
-            if('—introduced by' in _bill_titles[bill]):
-                title_split = _bill_titles[bill].split('—introduced by')
-                bill_dict = {URL: _bill_urls[bill], SHORT_TITLE: title_split[0], SPONSOR: title_split[1]}
-                self._bills_data.append(bill_dict)
-            else:
-                bill_dict = {URL: _bill_urls[bill], SHORT_TITLE: _bill_titles[bill], SPONSOR: ''}
-                self._bills_data.append(bill_dict)
+
+class SABillList(BillListExtractor):
+    @property
+    def all_bills(self):
+        return self._get_all_bills()
+
+    def _get_all_bills(self):
+        table = self._download_html(
+            BASE + 'listBills.aspx?key=').find('tbody')  # By providing a null key, the table returns all values.
+
+        bills_list = []
+        for bill_row in table.find_all('tr'):
+            title_text = bill_row.find('a').text.strip().replace('\n', '')
+            bill_title = title_text
+            sponsor = str()
+            if('—introduced by ' in title_text):
+                sponsor = title_text.split('—introduced by ')[-1]
+                bill_title = title_text.split('—introduced by ')[0]
+            bill_url = BASE + bill_row.find('a')['href'].replace(' ', '%20')
+            bills_list.append({
+                TITLE: bill_title,
+                URL: bill_url,
+                SPONSOR: sponsor
+            })
+        return bills_list
+
+
+@dataclass
+class BillMetaSA(BillMeta):
+    sponsor: str
+    chamber_progress: int
+
+
+def get_bills_metadata() -> List[BillMetaSA]:
+    all_bills = SABillList().all_bills
+
+    meta_list = []
+    for bill_dict in all_bills:
+        meta_list.append(BillMetaSA(
+            title=bill_dict[TITLE],
+            link=bill_dict[URL],
+            parliament=Parliament.SA.value,
+            sponsor=bill_dict[SPONSOR],
+            chamber_progress=ChamberProgress.FIRST_READING.value
+        ))
+    return meta_list
+
+
+@dataclass
+class BillSA(Bill, BillMetaSA):
+    pass
+
+
+class SAHelper(BillExtractor):
+    def __init__(self, bill_meta: BillMetaSA):
+        self.url = bill_meta.link
+        self.bill_soup = self._download_html(self.url).find('tbody')
+
+    def __str__(self):
+        return f"<Bill | URL: '{self.url}'>"
+
+    def __repr__(self):
+        return ('<{}.{} : {} object at {}>'.format(
+            self.__class__.__module__,
+            self.__class__.__name__,
+            self.url,  # TODO There's no easily accessible bill number or ID so this seems like the best option, could be others though.
+            hex(id(self))))
 
     @property
-    def data(self):
-        return(self._bills_data)
+    def text_links(self):
+        return self._get_text_links()
 
-sa_all_bills = sa_All_Bills().data
+    def _get_text_links(self):
+        links = []
+        for index, row in enumerate(self.bill_soup.find_all('tr')):
+            link = BASE + row.find_all('td')[1] \
+                .find('a')['href'].replace(' ', '%20')
 
-class sa_Bill(object):
-    def __init__(self, input):
-        if(isinstance(input, dict)):
-            try:
-                self.create_vars(input)
-            except Exception as e:
-                raise ValueError('Dict must have correct keys, missing key ' + e)
+            house = House.LOWER.value if 'House of Assembly' \
+                in row.text else House.UPPER.value
+
+            links.append({
+                API_ID: index,
+                API_HOUSE: house,
+                URL: link
+            })
+        return links
+
+    @property
+    def progress(self):
+        return self._get_progress()
+
+    def _get_progress(self):
+        final_row = self.bill_soup.find_all('tr')[-1].find('td')
+        prog_dict = {
+            BillProgress.FIRST.value: True,
+            BillProgress.SECOND.value: False,
+            BillProgress.ASSENTED.value: False
+        }
+        if 'received' in final_row.text:  # This means that the bill has been moved from one house to another
+            prog_dict = {
+                BillProgress.FIRST.value: True,
+                BillProgress.SECOND.value: True,
+                BillProgress.ASSENTED.value: False
+            }
+        elif 'introduced' in final_row.text or 'restored' in final_row.text:
+            if 'House of Assembly' not in final_row.text:
+                prog_dict = {
+                    BillProgress.FIRST.value: False,
+                    BillProgress.SECOND.value: True,
+                    BillProgress.ASSENTED.value: False
+                }
+        elif 'passed both' in final_row.text:
+            prog_dict = {
+                BillProgress.FIRST.value: True,
+                BillProgress.SECOND.value: True,
+                BillProgress.ASSENTED.value: True
+            }
         else:
-            raise ValueError('Input must be valid sa_Bill dict data...')
-    
-    def create_vars(self, init_data):
-        self._bill_data = init_data
-        self.url = init_data[URL]
-        self.short_title = init_data[SHORT_TITLE]
-        try:
-            self.bill_soup = BeautifulSoup(get(self.url).text, 'lxml')
-        except:
-            raise Exception('Unable to scrape ' + self.url)
-    
-    @property
-    def sponsor(self):
-        if(self._bill_data[SPONSOR] == ''):
-            try:
-                text = self.bill_soup.find('div', {'class': 'ItemIntroducedBy'}).find('p').text
-                return(text)
-            except:
-                return ''
-        else:
-            return(self._bill_data[SPONSOR][1:])
-    
-    @property
-    def texts(self):
-        try:
-            data_list = []
-            table_body = self.bill_soup.find('table', {'summary': 'A List of the various stages of this Bill'}).find('tbody')
-            links = table_body.find_all('a', {'title': 'View document in PDF in new window'})
-            for link in links:
-                data_url = sa_base_url + link['href'].replace(' ', '%20')
-                data_text = link.parent.findPrevious('td').text
-                data_dict = {data_text: data_url}
-                data_list.append(data_dict)
-            return(data_list)
-        except:
-            return []
+            raise self.ExtractorError(
+                f'Could not accurately determine bill progress for {self.url} \
+                    \n\n{self.__repr__()}')
 
-    @property
-    def data(self):
-        self._bill_data[TEXTS] = self.texts
-        self._bill_data[SPONSOR] = self.sponsor
-        return(self._bill_data)
+        return prog_dict
+
+
+def get_bill(bill_meta: BillMetaSA) -> BillSA:
+    sa_helper = SAHelper(bill_meta)
+
+    bill_data = BillSA(
+        **dataclasses.asdict(bill_meta),
+        bill_text_links=sa_helper.text_links,
+        progress=sa_helper.progress
+    )
+    return bill_data
