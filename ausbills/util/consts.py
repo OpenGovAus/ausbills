@@ -1,4 +1,5 @@
 # Common
+VALUE = '__value__'
 API_ID = '__id'
 API_TIME = '__time'
 API_HOUSE = 'house'

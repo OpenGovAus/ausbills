@@ -1,6 +1,6 @@
 from ausbills.util import BillExtractor
 from ausbills.models import BillMeta, Bill
-from ..types import BillProgress, ChamberProgress, Parliament
+from ausbills.types import BillProgress, ChamberProgress, Parliament
 from dataclasses import dataclass
 import json
 
@@ -283,7 +283,7 @@ class BillFedHelper(BillExtractor):
                            PDF: '',
                            HTML: ''}
         all_texts = []
-        tr_code = 'main_0_textOfBillReadingControl_readingItemRepeater_trFirstReading1_'
+        tr_code = 'main_0_textOfBillReadingControl_readingItemRepeater_trFirstReading1_0'
         for code_n in range(3):
             try:
                 tr = self.bill_soup.find(
@@ -358,8 +358,12 @@ class BillFedHelper(BillExtractor):
                     self._bill_data[TEXT_LINK + '_' +
                                     TEXT] = self.bill_text_links[reading][TEXT]
                     self._bill_data[CURRENT_READING] = reading
-            self._bill_data[EM_LINK + '_' +
-                            TEXT] = self.explanatory_memoranda_links[TEXT]
+            try:
+                self._bill_data[EM_LINK + '_' +
+                                TEXT] = self.explanatory_memoranda_links[TEXT]
+            except Exception:
+                self._bill_data[EM_LINK + '_' +
+                                TEXT] = ''
         return self._bill_data
 
     def to_json(self) -> str:

@@ -70,7 +70,3 @@ See [this example](examples/download_all_wa_bills.py) for an implementation of t
 ## Contributing
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md)
-
-### Todo
-
-- Write better usage docs

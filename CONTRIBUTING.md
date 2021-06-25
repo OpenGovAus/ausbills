@@ -153,3 +153,17 @@ To add a parliament that isn't supported by `ausbills` by using its functionalit
     ```
 
     This should print any code standard errors (like long lines or unused imports) that should be fixed before creating a Pull Request.
+
+## Testing
+
+Once you've written your bill scraper, it needs to pass our generic test, you can check if it does by running this command:
+
+```sh
+py -m pytest -s tests/test_generic.py --parl '[parliament name]'
+```
+
+Where `'[parliament name]'` would be `'scotland'` in this case, since our module is written in `scotland.py`.
+
+If the test does not pass, fix any errors and try again, etc etc.
+
+You can also write a more specific test for your module if you think it's necessary.

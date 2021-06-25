@@ -62,7 +62,7 @@ class WABillList(BillListExtractor):
         else:
             return {BillProgress.FIRST.value: True, BillProgress.SECOND.value: False, BillProgress.ASSENTED.value: False}
     def _get_col_date(self, row):
-        return self._get_timestamp(row.text.strip().split('- ')[-1], '%d %b %Y')
+        return self._get_timestamp(row.text.strip().split('- ')[-1].strip(), '%d %b %Y')
 
 
 def get_bills_metadata() -> List[BillMetaWA]:
@@ -112,8 +112,8 @@ class WABillHelper(BillExtractor):
             hex(id(self))))
 
     def _get_bill_no(self):
-        return int(self.table[0].find_all(
-            'tr')[1].find_all('td')[-1].text.strip())
+        return self.table[0].find_all(
+            'tr')[1].find_all('td')[-1].text.strip().replace('-', '.')
 
     def _get_summary(self):
         return self.table[0].find_all('tr')[2].find_all('td')[1].text.strip().replace('\n', ' ')
