@@ -2,11 +2,12 @@ import dataclasses
 from dataclasses import dataclass
 from typing import Dict, List
 
+
 from ausbills.log import get_logger
 from ausbills.util.consts import *
 from ausbills.util import BillListExtractor, BillExtractor
 from ausbills.models import Bill, BillMeta
-from ausbills.types import BillProgress, ChamberProgress, House, Parliament
+from ausbills.types import BillProgress, ChamberProgress, Parliament
 
 vic_logger = get_logger(__file__)
 
@@ -80,7 +81,8 @@ class VicBillList(BillListExtractor):
             'Amendments under consideration': ChamberProgress.SECOND_READING.value
         }
 
-        if stattext == 'Passed both Houses' or stattext == 'Passed and Assented to':
+        if stattext == 'Passed both Houses' \
+                or stattext == 'Passed and Assented to':
             prog_dict = {
                 BillProgress.FIRST.value: True,
                 BillProgress.SECOND.value: True,
@@ -136,3 +138,75 @@ def get_bills_metadata() -> List[BillMetaVic]:
             chamber_progress=bill_dict[PROGRESS][1]
         ))
     return meta_list
+
+
+@dataclass
+class BillVic(Bill, BillMetaVic):
+    bill_em_links: List[Dict]
+    sponsor: str
+
+
+class VicBillHelper(BillExtractor):
+    def __init__(self, bill_meta: BillMetaVic):
+        self.url = bill_meta.link
+        self.bill_soup = self._download_html(self.url)
+
+    def __str__(self):
+        return f"<Bill | URL: '{self.url}'>"
+
+    def __repr__(self):
+        return ('<{}.{} : {} object at {}>'.format(
+            self.__class__.__module__,
+            self.__class__.__name__,
+            self.url,
+            hex(id(self))))
+
+    @property
+    def sponsor(self):
+        return self._get_sponsor()
+
+    def _get_sponsor(self):
+        first_table = self.bill_soup.find('div', {'class': 'lgs-bill-table'})
+        sponsor_tag = first_table.find(
+            'span', {'class': 'lgs-bill-table__term-title--bold'})
+        if sponsor_tag is not None:
+            return sponsor_tag.text
+        else:
+            return None
+
+    @property
+    def em_links(self):
+        return self._get_doc_url('Introduction print – Explanatory Memorandum')
+
+    @property
+    def text_links(self):
+        return self._get_doc_url('Introduction print – Bill')
+
+    def _get_doc_url(self, data_tid):
+        header = self.bill_soup.find(
+            'li',
+            {
+                'data-tid': data_tid
+            })
+        if header is not None:
+            for link in header.find_all('a'):
+                if '.pdf' in link['href'] or '.PDF' in link['href']:
+                    doc_url = link['href']
+
+            return [{
+                URL: doc_url,
+                API_ID: 0
+            }]
+        else:
+            return [{}]
+
+
+def get_bill(bill_meta: BillMetaVic) -> BillVic:
+    vic_helper = VicBillHelper(bill_meta)
+    bill_data = BillVic(
+        **dataclasses.asdict(bill_meta),
+        sponsor=vic_helper.sponsor,
+        bill_em_links=vic_helper.em_links,
+        bill_text_links=vic_helper.text_links
+    )
+    return bill_data
