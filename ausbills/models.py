@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from typing import Dict, List, NewType
-from .types import Parliament, House
 import json
 
 PdfUrl = NewType('PdfUrl', str)
