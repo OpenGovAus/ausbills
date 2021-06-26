@@ -1,138 +1,232 @@
-import datetime
-from requests import get
-from bs4 import BeautifulSoup
-import io
-import re
+import json
+import dataclasses
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Dict, List
 
-URL = 'url'
-TITLE = 'title'
-STATUS = 'status'
-ORIGIN = 'origin'
-ACT_NO = 'act_no'
-YEAR = 'year'
-TYPE = 'type'
-CARRIAGE_MEMBER = 'carriage_member'
-LONG_TITLE = 'long_title'
-BILL_TEXT = 'text'
+from ausbills.util import BillExtractor, BillListExtractor
+from ausbills.models import Bill, BillMeta
+from ausbills.types import Parliament, House, BillProgress, ChamberProgress, BillTypes
+from ausbills.util.consts import *
+from ausbills.log import get_logger
 
-base_url = 'https://www.parliament.nsw.gov.au/bills/pages/all-bills-1997.aspx?session=0'
 
-class nsw_All_Bills(object):
-    _bills_data = []
-    def __init__(self):
-        self._create_dataset()
+nsw_logger = get_logger(__file__)
 
-    def _create_dataset(self):
-        _bill_titles = []
-        _bill_origin = []
-        _bill_urls = []
 
-        soup = BeautifulSoup(get(base_url).text, 'lxml')
-        table = soup.find('table', {'id': 'prlMembers'})
-        rows = table.find_all('tr')
-        rows.pop(0)
-        for row in rows:
-            _bill_titles.append(row.find_all('td')[0].text[5:-3])
-            _bill_origin.append(row.find_all('td')[1].text[1:].replace('LA', 'Legislative Assembly').replace('LC', 'Legislative Council'))
+class NSWBillList(BillListExtractor):
+    @property
+    def bill_list(self) -> List[Dict]:
+        return self.__get_bill_list()
+
+    def __get_bill_list(self) -> List[Dict]:
+        API_QUERY = "https://legislation.nsw.gov.au/projectdata?"\
+            "ds=NSW_PCO-BillDataSource&start=1&count=100&sortFie"\
+            "ld=Title_Sort&sortDirection=asc&expression=%22Event"\
+            "+Name%22%3DIntroduced+AND+%22Parliament+Year%22%3E%"\
+            "3D{}0000000000+AND+Title_Phrase%3D'%3F&subset=F&c"\
+            "ollection=&_={}".format(
+                self.__get_parl_year(),
+                str(int(datetime.now().timestamp())) + '000')
+        bills_json = self._download_json(API_QUERY)['data']
+
+        if(len(bills_json) == 0):
+            print(API_QUERY)
+            print('\n\n' + json.dumps(bills_json, indent=2) + '\n\n')
+            raise ValueError('Missing bills.')
+
+        bills_list = []
+        for bill_entry in bills_json:
+            bill_title = bill_entry[TITLE][VALUE]
+            bill_url = 'https://legislation.nsw.gov.au/view/html/bill/' \
+                + bill_entry['record-id']
             try:
-                _bill_urls.append(('https://www.parliament.nsw.gov.au' + row.find('a', {'class': 'prl-name-link'})['href']))
-            except:
-                _bill_urls.append('')
-        for bill in range(len(_bill_titles)):
-            _bill_dict = {TITLE: _bill_titles[bill], URL: _bill_urls[bill], ORIGIN: _bill_origin[bill]}
-            self._bills_data.append(_bill_dict)
-    
-    @property
-    def data(self):
-        return(self._bills_data)
+                ceguid = bill_entry['Bill Stub'][VALUE][CHILDREN][3] \
+                    [CHILDREN][1][CHILDREN][CHILDREN][1]['@ceguid']
+            except Exception:
+                ceguid = bill_entry['Bill Stub'][VALUE][CHILDREN][3] \
+                    [CHILDREN][1][CHILDREN][1][CHILDREN][1]['@ceguid']  # Because the API provides some HTML info, this can sometimes include missing newlines, messing with the pattern.
 
-nsw_all_bills = nsw_All_Bills().data
+            bill_text_url = [{
+                API_ID: 0,
+                URL: 'https://legislation.nsw.gov.au/view/pdf/bill/' + ceguid
+            }]
 
-class nsw_Bill(object):
-    _bill_data = dict()
+            bill_type = {
+                'nongov': BillTypes.PRIVATE_MEMBER.value,
+                'gov': BillTypes.GOVERNMENT.value
+            }[bill_entry['bill.type']]
 
-    def __init__(self, bill_dict: dict = None):
-        initial_data = bill_dict
-        if initial_data is None:
-            raise ValueError('This shouldn\'t even be possible yet...')
+
+            # print(bill_text_url)
+            bill_progress = self.__process_progress(
+                bill_entry['Bill Stub'][VALUE][CHILDREN]
+            )
+
+            bills_list.append({
+                URL: bill_url,
+                TITLE: bill_title,
+                BILL_TYPE: bill_type,
+                PROGRESS: bill_progress[0][0],
+                CHAMBER_PROGRESS: bill_progress[0][1],
+                INTRO_DATE: bill_progress[1][0],
+                ASSENT_DATE: bill_progress[1][1],
+                TEXT_LINK: bill_text_url,
+                EM_LINK: bill_text_url,  # NSW Bills include the explanatory statement in their prints.
+                ID: ceguid,
+            })
+        return bills_list
+
+    def __process_progress(self, events_object):
+
+        def get_event(event_entry):
+            if(isinstance(event_entry, dict)):  # Again, \n entries mess us up here
+                if(isinstance(event_entry[CHILDREN], dict)):
+                    split_lst = event_entry[CHILDREN] \
+                        [CHILDREN][0][CHILDREN].strip().split(':', 1)
+                elif(isinstance(event_entry[CHILDREN], list)):
+                    split_lst = event_entry[CHILDREN][1] \
+                        [CHILDREN][0][CHILDREN].strip().split(':', 1)
+                else:
+                    return []
+                return split_lst
+
+        # Find intro house
+        intro_event = get_event(events_object[3][CHILDREN][1])
+        intro_date = self._get_timestamp(
+            intro_event[1].split('\n')[1].strip(), '%d/%m/%Y')
+        assent_date = None
+
+        intro_house = {
+            'LA': House.LOWER.value,
+            'draft': House.LOWER.value,
+            'LC': House.UPPER.value
+        }[intro_event[0].split(' ')[-1]]
+
+        chamber_progress = ChamberProgress.FIRST_READING.value
+
+        prog_dict = {BillProgress.ASSENTED.value: False}
+        if intro_house == House.LOWER.value:
+            prog_dict[BillProgress.FIRST.value] = True
+            prog_dict[BillProgress.SECOND.value] = False
+        else:
+            prog_dict[BillProgress.SECOND.value] = True
+            prog_dict[BillProgress.FIRST.value] = False
 
         try:
-            self._bill_data = dict(**initial_data)
-            self.url = initial_data[URL]
-            self.title = initial_data[TITLE]
-            self.origin = initial_data[ORIGIN]
-            self.page_data = get(self.url).text
-            self.bill_soup = BeautifulSoup(self.page_data, 'lxml')
-        except KeyError as e:
-            raise KeyError('Dict must have correct keys, missing key ' + e)
-    
-    @property
-    def bill_text(self):
-        try:
-            text_url = self.bill_soup.find('td', {'class': 'bill-details-docs right'}).find('td', {'class': 'attachment'}).find('a', {'target': '_blank'})['href']
-            return(text_url)
-        except:
-            return('')
+            most_recent = get_event(events_object[3][CHILDREN][-2])
+        except KeyError:
+            most_recent = None
+            nsw_logger.info(
+                f'Could not find event data for {events_object[3][CHILDREN][-2]}.')
+
+        if most_recent is not None:
+            if most_recent[0] == 'Introduced LA':
+                prog_dict[BillProgress.FIRST.value] = True
+                chamber_progress = ChamberProgress.SECOND_READING.value
+            elif most_recent[0] == 'Introduced LC':
+                prog_dict[BillProgress.SECOND.value] = True
+                chamber_progress = ChamberProgress.SECOND_READING.value
+            elif most_recent[0] == 'Passed by both Houses':
+                prog_dict = {
+                    BillProgress.FIRST.value: True,
+                    BillProgress.SECOND.value: True,
+                    BillProgress.ASSENTED.value: True
+                }
+                chamber_progress = ChamberProgress.THIRD_READING.value
+                assent_date = self._get_timestamp(
+                    most_recent[1].split('\n')[1].strip(), '%d/%m/%Y')
+            else:
+                nsw_logger.warning(
+                    f'Unrecognised event status for {most_recent[0]}.')
+
+        progress = [
+            [prog_dict, chamber_progress],
+            [intro_date, assent_date]
+        ]
+
+        return progress
+
+    def __get_parl_year(self):
+        webpage = self._download_html(
+            'https://legislation.nsw.gov.au/browse/bills')
+
+        return webpage.find('div', {'class': 'browse-panel'}).find(
+            'h2').contents[0].strip()[-4:]
+
+
+@dataclass
+class BillMetaNSW(BillMeta):
+    id: str
+    bill_type: str
+    bill_text_links: List[Dict]
+    bill_em_links: List[Dict]
+    progress: Dict
+    chamber_progress: int
+    bill_type: str
+    intro_date: int
+    assent_date: int
+
+
+def get_bills_metadata() -> List[BillMetaNSW]:
+    bills_list = []
+    for bill_dict in NSWBillList().bill_list:
+        bills_list.append(BillMetaNSW(
+            parliament=Parliament.NSW.value,
+            title=bill_dict[TITLE],
+            link=bill_dict[URL],
+            progress=bill_dict[PROGRESS],
+            chamber_progress=bill_dict[CHAMBER_PROGRESS],
+            bill_type=bill_dict[BILL_TYPE],
+            bill_text_links=bill_dict[TEXT_LINK],
+            bill_em_links=bill_dict[EM_LINK],
+            intro_date=bill_dict[INTRO_DATE],
+            assent_date=bill_dict[ASSENT_DATE],
+            id=bill_dict[ID]
+        ))
+    return bills_list
+
+
+@dataclass
+class BillNSW(Bill, BillMetaNSW):
+    sponsor: str
+
+
+class NSWBillHelper(BillExtractor):
+    def __init__(self, bill_meta: BillMetaNSW):
+        self.url = bill_meta.link
+        self.bill_soup = self._download_html(self.url)
+        self.id = bill_meta.id
+
+    def __str__(self):
+        return f"<Bill | URL: '{self.url}'>"
+
+    def __repr__(self):
+        return ('<{}.{} : {} object at {}>'.format(
+            self.__class__.__module__,
+            self.__class__.__name__,
+            self.id,
+            hex(id(self))))
 
     @property
-    def bill_type(self):
-        try:
-            table = self.bill_soup.find('table', {'class': re.compile(r'(details green-table|details maroon-table)')})
-            return(table.find('tr').find_all('td')[1].text)
-        except:
-            raise Exception('Couldn\'t find table in: ' + self.url)
-        
+    def sponsor(self):
+        return self._get_sponsor()
 
-    @property
-    def status(self):
-        table = self.bill_soup.find('table', {'class': re.compile(r'(details green-table|details maroon-table)')})
-        return(table.find_all('tr')[1].find_all('td')[1].text)
-
-    @property
-    def carriage_member(self):
-        member = None
-        table = self.bill_soup.find('table', {'class': re.compile(r'(details green-table|details maroon-table)')})
-        for td in table.find_all('td'):
-            if('Member with Carriage:' in td.text):
-                member = td.findNext('td').text
-        if member == None:
-            return ''
+    def _get_sponsor(self):
+        span = self.bill_soup.find('span', {'class': 'bill-type'}).text
+        if len(span.split(' - ')) > 1:
+            return span.split(' - ')[-1] \
+                .replace('introduced by ', '').title()
         else:
-            return member
+            return None
 
-    @property
-    def long_title(self):
-        longtitle = None
-        table = self.bill_soup.find('table', {'class': re.compile(r'(details green-table|details maroon-table)')})
-        for td in table.find_all('td'):
-            if('Long Title:' in td.text):
-                longtitle = td.findNext('td').text
-        if longtitle == None:
-            return ''
-        else:
-            return longtitle
 
-    @property
-    def act_no(self):
-        number = None
-        table = self.bill_soup.find('table', {'class': re.compile(r'(details green-table|details maroon-table)')})
-        for td in table.find_all('td'):
-            if('Act number:' in td.text):
-                number = td.findNext('td').text
-        if number == None:
-            return ''
-        else:
-            return number
+def get_bill(bill_meta: BillMetaNSW) -> BillNSW:
+    nsw_helper = NSWBillHelper(bill_meta)
 
-    @property
-    def data(self):
-        self._bill_data[URL] = self.url
-        self._bill_data[TYPE] = self.bill_type
-        self._bill_data[ACT_NO] = self.act_no
-        self._bill_data[LONG_TITLE] = self.long_title.replace('\r', '').replace('\n', '')
-        self._bill_data[CARRIAGE_MEMBER] = self.carriage_member
-        self._bill_data[STATUS] = self.status
-        self._bill_data[ORIGIN] = self.origin
-        self._bill_data[TITLE] = self.title
-        self._bill_data[BILL_TEXT] = self.bill_text
-        return(self._bill_data)
+    bill_data = BillNSW(
+        **dataclasses.asdict(bill_meta),
+        sponsor=nsw_helper.sponsor
+    )
+
+    return bill_data

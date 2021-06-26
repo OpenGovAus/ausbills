@@ -35,3 +35,6 @@ INTRO_HOUSE = "intro_house"
 PASSED_HOUSE = "passed_house"
 INTRO_SENATE = "intro_senate"
 PASSED_SENATE = "passed_senate"
+
+# NSW
+CHILDREN = '__children__'
