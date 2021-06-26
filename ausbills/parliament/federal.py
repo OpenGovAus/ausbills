@@ -202,7 +202,7 @@ def get_bills_metadata() -> List[BillMetaFed]:
     for bill_dict in _all_bills:
         house = "LOWER" if bill_dict[CHAMBER] == "house" else "UPPER"
         bill_meta = BillMetaFed(
-            parliament=Parliament.FEDERAL,
+            parliament=Parliament.FEDERAL.value,
             house=house,
             id=bill_dict[ID],
             title=bill_dict[SHORT_TITLE],
@@ -318,9 +318,13 @@ class BillFedHelper(BillExtractor):
         if tr is None:
             return dict()
         links = list(tr.find_all('td')[1].find_all('a'))
-        return {DOC: links[0]['href'],
-                PDF: links[1]['href'],
-                HTML: links[2]['href']}
+        return [
+            {
+                API_ID: 0,
+                URL: links[1]['href'],
+            }
+        ]
+        
 
     def get_sponsor(self) -> Maybe[str]:
         try:
@@ -410,12 +414,14 @@ class BillFedHelper(BillExtractor):
         elif 'Third' in stage_text:
             _reading = ChamberProgress.THIRD_READING.value
         else:
-            log.warning('Could not identify reading stage, using second; \n' + stage_text)
+            log.warning(
+                'Could not identify reading stage, using second; \n' + stage_text)
             _reading = ChamberProgress.SECOND_READING.value
 
         return [_reading, _prog_dict]
 
-############### NEW #######################
+
+# NEW
 
 # wrapper function for getting the bill
 def get_bill(bill_meta: BillMetaFed) -> BillFed:
@@ -433,7 +439,8 @@ def get_bill(bill_meta: BillMetaFed) -> BillFed:
     bill_fed = BillFed(
         title=bill_meta.title,
         link=bill_meta.link,
-        sponsor=fed_helper.sponsor if fed_helper.sponsor != "" else fed_helper.portfolio,
+        sponsor=fed_helper.sponsor
+                if fed_helper.sponsor != "" else fed_helper.portfolio,
         text_link=fed_helper.data[CURRENT_READING],
         # From bill_meta
         parliament=str(bill_meta.parliament),
