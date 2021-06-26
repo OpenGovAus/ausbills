@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ausbills"
-version = "0.9.0"
+version = "0.9.9"
 description = "Get current parliament bills from Australian governments."
 authors = ["OpenGov Australia <kip.crossing@gmail.com>"]
 license = "MIT"
