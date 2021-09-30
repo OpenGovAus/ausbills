@@ -295,11 +295,11 @@ class BillFedHelper(BillExtractor):
                     reading_dict[typ] = text
         return reading_dict
 
-    def get_bill_em_links(self) -> dict:
+    def get_bill_em_links(self) -> List[Dict[str, str]]:
         tr = self.bill_soup.find(
             "tr", id='main_0_explanatoryMemorandaControl_readingItemRepeater_trFirstReading1_0')
         if tr is None:
-            return dict()
+            return []
         links = list(tr.find_all('td')[1].find_all('a'))
         return [
             {
