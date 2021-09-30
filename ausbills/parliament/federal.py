@@ -388,18 +388,21 @@ class BillFedHelper(BillExtractor):
                 _prog_dict = {BillProgress.FIRST.value: True, BillProgress.SECOND.value: True, BillProgress.ASSENTED.value: False}
                 if _house_timestamp == 0:
                     _prog_dict[BillProgress.FIRST.value] = False
-        
-        stage_text = self.bill_soup.find_all('th', string=_chamber)[0].parent.parent.parent.find('tbody').find_all('tr')[-1].text.strip()
-        if 'First' in stage_text:
+
+        try:
+            stage_text = self.bill_soup.find_all('th', string=_chamber)[0].parent.parent.parent.find('tbody').find_all('tr')[-1].text.strip()
+            if 'First' in stage_text:
+                _reading = ChamberProgress.FIRST_READING.value
+            elif 'Second' in stage_text or 'Referred' in stage_text or 'Restored' in stage_text:
+                _reading = ChamberProgress.SECOND_READING.value
+            elif 'Third' in stage_text:
+                _reading = ChamberProgress.THIRD_READING.value
+            else:
+                log.warning(
+                    'Could not identify reading stage, using second; \n' + stage_text)
+                _reading = ChamberProgress.SECOND_READING.value
+        except IndexError:
             _reading = ChamberProgress.FIRST_READING.value
-        elif 'Second' in stage_text or 'Referred' in stage_text or 'Restored' in stage_text:
-            _reading = ChamberProgress.SECOND_READING.value
-        elif 'Third' in stage_text:
-            _reading = ChamberProgress.THIRD_READING.value
-        else:
-            log.warning(
-                'Could not identify reading stage, using second; \n' + stage_text)
-            _reading = ChamberProgress.SECOND_READING.value
 
         return [_reading, _prog_dict]
 
