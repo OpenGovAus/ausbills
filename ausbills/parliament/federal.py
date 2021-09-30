@@ -1,20 +1,22 @@
-from ausbills.util import BillExtractor
-from ausbills.models import BillMeta, Bill
-from ausbills.types import BillProgress, ChamberProgress, Parliament
-from dataclasses import dataclass
 import json
-
-
-from bs4 import BeautifulSoup, ResultSet
-import requests
 import datetime
+import requests
 
+
+from typing import List, Dict
 from pymonad.maybe import Maybe
+from dataclasses import dataclass
+from bs4 import BeautifulSoup, ResultSet
 
+
+from ausbills.util import BillExtractor
+from ausbills.util.consts import *
+
+from ausbills.types import BillProgress, ChamberProgress, Parliament, Timestamp
+from ausbills.models import BillMeta, Bill
 from ausbills.json_encoder import AusBillsJsonEncoder
 from ausbills.log import get_logger
-from ausbills.util.consts import * 
-from typing import List, Dict
+
 
 log = get_logger(__file__)
 
@@ -142,46 +144,28 @@ def get_all_bills():
     return _all_bills_global
 
 
-####################### NEW #######################
-
-
-class DateString(str):
-    pass
-
-# Your state specific BillMeta[State] should extend BillMeta
-# Then ass any state specific fields
-
-
 @dataclass
 class BillMetaFed(BillMeta):
     house: str
     id: str
-    intro_house: DateString
-    passed_house: DateString
-    intro_senate: DateString
-    passed_senate: DateString
-    assent_date: DateString
+    intro_house: Timestamp
+    passed_house: Timestamp
+    intro_senate: Timestamp
+    passed_senate: Timestamp
+    assent_date: Timestamp
     act_no: int
-
-# Bill[State] extends both BillMeta[State] and Bill
 
 
 @dataclass
 class BillFed(Bill, BillMetaFed):
-    # Todo add state specific fields
     text_link: str
     summary: str
     sponsor: str
     portfolio: str
-    bill_em_links: List[Dict]  # TODO need to make more general
+    bill_em_links: List[Dict]
 
-# TODO need to discuss the general datestring for ausbills. I used YYYY-MM-DD
-
-# TODO king-millez: re ^ I think just using a datetime timestamp is the best,
-# TODO datetime has functions to convert timestamps to any format a user may want
 
 def dt_to_str(in_date, template="YYYY-MM-DD"):
-    template
     if in_date is not None and not isinstance(in_date, str):
         out_date = template.replace("YYYY", str(in_date.year))\
             .replace("MM", f"{in_date.month:02d}").replace("DD", f"{in_date.day:02d}")
@@ -190,7 +174,6 @@ def dt_to_str(in_date, template="YYYY-MM-DD"):
     return out_date
 
 
-# this is just a wrapper for AllBills().data that returns List[BillMetaFed]
 def get_bills_metadata() -> List[BillMetaFed]:
     """Gets a list of all the federal bills metadata
 
@@ -421,9 +404,6 @@ class BillFedHelper(BillExtractor):
         return [_reading, _prog_dict]
 
 
-# NEW
-
-# wrapper function for getting the bill
 def get_bill(bill_meta: BillMetaFed) -> BillFed:
     """Uses the bill metadata to scrape the rest of the bill info
 
@@ -434,6 +414,11 @@ def get_bill(bill_meta: BillMetaFed) -> BillFed:
         BillFed: Including the federal specific information
         Note: use BillFed.asDict() and BillFed.asJson() to get the data
     """
+    def stupid_timestamp_thing(input_date):
+        try:
+            return int(datetime.datetime.strptime(input_date, '%Y-%m-%d').timestamp())
+        except ValueError:
+            return ''
     fed_helper: BillFedHelper = BillFedHelper(bill_meta)
     progdata = fed_helper.chamber_progress
     bill_fed = BillFed(
@@ -446,11 +431,11 @@ def get_bill(bill_meta: BillMetaFed) -> BillFed:
         parliament=str(bill_meta.parliament),
         house=bill_meta.house,
         id=bill_meta.id,
-        intro_house=bill_meta.intro_house,
-        passed_house=bill_meta.passed_house,
-        intro_senate=bill_meta.intro_senate,
-        passed_senate=bill_meta.passed_senate,
-        assent_date=bill_meta.assent_date,
+        intro_house=stupid_timestamp_thing(bill_meta.intro_house),
+        passed_house=stupid_timestamp_thing(bill_meta.passed_house),
+        intro_senate=stupid_timestamp_thing(bill_meta.intro_senate),
+        passed_senate=stupid_timestamp_thing(bill_meta.passed_senate),
+        assent_date=stupid_timestamp_thing(bill_meta.assent_date),
         act_no=bill_meta.act_no,
         # From fed_helper
         summary=fed_helper.summary,

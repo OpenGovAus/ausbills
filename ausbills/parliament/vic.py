@@ -9,7 +9,9 @@ from ausbills.util import BillListExtractor, BillExtractor
 from ausbills.models import Bill, BillMeta
 from ausbills.types import BillProgress, ChamberProgress, Parliament
 
+
 vic_logger = get_logger(__file__)
+
 
 BASE = 'https://www.legislation.vic.gov.au/'
 API_CALL = BASE + 'app/api/search/title_content?from=0&size=999&include' \

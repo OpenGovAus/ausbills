@@ -7,7 +7,8 @@ from ausbills.util import BillExtractor, BillListExtractor
 from ausbills.log import get_logger
 from ausbills.models import Bill, BillMeta
 from ausbills.types import House, Parliament, ChamberProgress, \
-    BillProgress, BillTypes
+    BillProgress, BillTypes, Timestamp
+
 
 qld_logger = get_logger(__file__)
 
@@ -55,7 +56,7 @@ class QLDBillList(BillListExtractor):
 
 @dataclass
 class BillMetaQLD(BillMeta):
-    intro_assembly: int
+    intro_assembly: Timestamp
     id: str
 
 

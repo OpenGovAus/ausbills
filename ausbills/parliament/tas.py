@@ -9,6 +9,7 @@ from ausbills.types import BillProgress, ChamberProgress, House, Parliament
 from ausbills.log import get_logger
 from ausbills.models import Bill, BillMeta
 
+
 DOMAIN = 'https://www.parliament.tas.gov.au'
 BASE_URL = DOMAIN + '/Bills/current/'
 

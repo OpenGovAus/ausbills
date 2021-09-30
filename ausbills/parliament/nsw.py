@@ -6,7 +6,7 @@ from typing import Dict, List
 
 from ausbills.util import BillExtractor, BillListExtractor
 from ausbills.models import Bill, BillMeta
-from ausbills.types import Parliament, House, BillProgress, ChamberProgress, BillTypes
+from ausbills.types import Parliament, House, BillProgress, ChamberProgress, BillTypes, Timestamp
 from ausbills.util.consts import *
 from ausbills.log import get_logger
 
@@ -164,8 +164,8 @@ class BillMetaNSW(BillMeta):
     progress: Dict
     chamber_progress: int
     bill_type: str
-    intro_date: int
-    assent_date: int
+    intro_date: Timestamp
+    assent_date: Timestamp
 
 
 def get_bills_metadata() -> List[BillMetaNSW]:

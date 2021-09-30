@@ -5,7 +5,7 @@ from typing import Dict, List
 from ausbills.util import BillExtractor, BillListExtractor
 from ausbills.util.consts import *
 from ausbills.models import BillMeta, Bill
-from ausbills.types import BillProgress, ChamberProgress, Parliament
+from ausbills.types import BillProgress, ChamberProgress, Parliament, Timestamp
 from ausbills.log import get_logger
 
 
@@ -20,8 +20,8 @@ wa_logger = get_logger(__file__)
 @dataclass
 class BillMetaWA(BillMeta):
     progress: Dict
-    assent_date: int
-    intro_date: int
+    assent_date: Timestamp
+    intro_date: Timestamp
 
 
 class WABillList(BillListExtractor):

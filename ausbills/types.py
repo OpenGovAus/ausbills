@@ -42,3 +42,7 @@ class ChamberProgress(Enum):
     FIRST_READING = 1
     SECOND_READING = 2
     THIRD_READING = 3  # I assume it's fine to not start this at 0, since we're not calling any indexes with it.
+
+
+class Timestamp(int):
+    pass

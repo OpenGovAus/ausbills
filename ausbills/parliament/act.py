@@ -4,7 +4,7 @@ from typing import Dict, List
 
 from ausbills.models import BillMeta, Bill, PdfUrl, UrlStr
 from ausbills.util import BillExtractor, BillListExtractor
-from ausbills.types import BillProgress, Parliament, BillTypes, ChamberProgress
+from ausbills.types import BillProgress, Parliament, BillTypes, ChamberProgress, Timestamp
 from ausbills.util.consts import *
 
 BASE_URL = 'https://legislation.act.gov.au'
@@ -66,8 +66,8 @@ class ACTBillList(BillListExtractor):
 @dataclass
 class BillMetaACT(BillMeta):
     bill_type: str
-    passed_assembly: int
-    intro_assembly: int
+    passed_assembly: Timestamp
+    intro_assembly: Timestamp
     progress: Dict
     chamber_progress: int
     id: int

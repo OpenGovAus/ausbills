@@ -6,9 +6,11 @@ from typing import Dict, List
 from ausbills.util.consts import *
 from ausbills.util import BillExtractor, BillListExtractor
 from ausbills.models import Bill, BillMeta
-from ausbills.types import Parliament, House, BillProgress, ChamberProgress
+from ausbills.types import Parliament, House, BillProgress, ChamberProgress, Timestamp
+
 
 BASE_URL = 'https://legislation.nt.gov.au/en/LegislationPortal/Bills/'
+
 
 class NTBillList(BillListExtractor):
 
@@ -43,11 +45,13 @@ class NTBillList(BillListExtractor):
             })
         return bills_list
 
+
 @dataclass
 class BillMetaNT(BillMeta):
     id: int
-    passed_assembly: int
-    intro_assembly: int
+    passed_assembly: Timestamp
+    intro_assembly: Timestamp
+
 
 def get_bills_metadata() -> List[BillMetaNT]:
     bill_meta_list = []
@@ -63,6 +67,7 @@ def get_bills_metadata() -> List[BillMetaNT]:
         )
         bill_meta_list.append(bill_meta)
     return bill_meta_list
+
 
 class BillNTHelper(BillExtractor):
     def __init__(self, bill_meta: BillMetaNT):
@@ -134,10 +139,12 @@ class BillNTHelper(BillExtractor):
         table = self.bill_soup.find('fieldset', {'class': 'roundedWhiteBorders'})
         return table.find_all('div', {'class': 'row'})[2].find('span').text
 
+
 @dataclass
 class BillNT(Bill, BillMetaNT):
     bill_em_links: List[Dict]
     sponsor: str
+
 
 def get_bill(bill_meta: BillMetaNT) -> BillNT:
     nt_helper = BillNTHelper(bill_meta)

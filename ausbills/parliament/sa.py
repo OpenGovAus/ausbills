@@ -8,6 +8,7 @@ from ausbills.util import BillExtractor, BillListExtractor
 from ausbills.models import Bill, BillMeta
 from ausbills.types import House, Parliament, BillProgress, ChamberProgress
 
+
 BASE = 'https://www.legislation.sa.gov.au/'
 
 
