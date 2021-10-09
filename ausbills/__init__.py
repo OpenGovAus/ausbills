@@ -1,3 +1,3 @@
-from .log import get_logger
+from ausbills.log import get_logger
 
 log = get_logger('ausbills')

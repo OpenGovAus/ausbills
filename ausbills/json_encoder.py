@@ -1,6 +1,5 @@
 import base64
 import json
-from binascii import hexlify
 from datetime import datetime
 
 from bs4 import Tag
@@ -8,7 +7,7 @@ from pymonad.maybe import Maybe
 from dataclasses import is_dataclass
 
 from .log import get_logger
-from .types_parliament import House
+from .types import House
 
 json_d = json.JSONEncoder.default
 log = get_logger(__file__)
@@ -17,7 +16,8 @@ log = get_logger(__file__)
 class AusBillsJsonEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Maybe):
-            return {"$nothing": None} if obj.is_nothing() else {"$just": obj.value}
+            return {"$nothing": None} if \
+                obj.is_nothing() else {"$just": obj.value}
         if isinstance(obj, Tag):
             return {"$bs4.tag": obj.encode()}
         if isinstance(obj, bytes):
@@ -28,5 +28,8 @@ class AusBillsJsonEncoder(json.JSONEncoder):
             return {"$house": obj.value}
         if isinstance(obj, datetime):
             return {"$dateIso8601": obj.isoformat()}
-        log.warning(f"Got something of unexpected type ({type(obj)}\n\nObj: {str(obj)}\n\ndir: {dir(obj)}")
+        log.warning("Got something of unexpected type"
+                    "({}\n\nObj: {}\n\ndir: {}"
+                    .format(type(obj), str(obj), dir(obj)))
+
         return json_d(self, obj)
