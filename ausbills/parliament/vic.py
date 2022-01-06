@@ -80,7 +80,8 @@ class VicBillList(BillListExtractor):
             'second reading (passed Assembly)': ChamberProgress.SECOND_READING.value,
             'third reading (passed Assembly)': ChamberProgress.THIRD_READING.value,
             'Passed and Assented to': ChamberProgress.THIRD_READING.value,
-            'Amendments under consideration': ChamberProgress.SECOND_READING.value
+            'Amendments under consideration': ChamberProgress.SECOND_READING.value,
+            'Defeated': ChamberProgress.SECOND_READING.value
         }
 
         if stattext == 'Passed both Houses' \
