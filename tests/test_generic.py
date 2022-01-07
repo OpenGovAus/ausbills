@@ -27,8 +27,6 @@ Where PARLIAMENT would be the file name of the parliament's module without
 
     python -m pytest -s tests/test_generic.py --parl act
 
-"federal" is the default value.
-
 You can also pass "_test_all" to import every module in the parliament folder
 and test each one.
 '''

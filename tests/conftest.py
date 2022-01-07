@@ -1,5 +1,5 @@
 def pytest_addoption(parser):
-    parser.addoption("--parl", action="store", default='federal')
+    parser.addoption("--parl", action="store", default='_test_all')
 
 
 def pytest_generate_tests(metafunc):

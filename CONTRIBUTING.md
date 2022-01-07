@@ -173,5 +173,5 @@ You can also write a more specific test for your module if you think it's necess
 You can test all the parliament modules by running:
 
 ```sh
-py -m pytest -s tests/test_generic.py --parl '_test_all'
+py -m pytest -s tests/test_generic.py
 ```
