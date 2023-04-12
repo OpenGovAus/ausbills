@@ -24,14 +24,15 @@ class House(Enum):
 
 
 class BillTypes(Enum):
-    GOVERNMENT = 'GOVERNMENT'
-    PRIVATE_MEMBER = 'PRIVATE_MEMBER'
+    GOVERNMENT = "GOVERNMENT"
+    PRIVATE_MEMBER = "PRIVATE_MEMBER"
 
 
 class BillProgress(Enum):
-    FIRST = 'FIRST'
-    SECOND = 'SECOND'
-    ASSENTED = 'ASSENTED'
+    FIRST = "FIRST"
+    SECOND = "SECOND"
+    ASSENTED = "ASSENTED"
+
 
 # There are three stages for a bill to pass a chamber in any state/territory,
 # where the bill's short title is read in parliament (readings).

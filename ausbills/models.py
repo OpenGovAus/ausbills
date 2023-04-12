@@ -2,8 +2,8 @@ from dataclasses import dataclass
 from typing import Dict, List, NewType
 import json
 
-PdfUrl = NewType('PdfUrl', str)
-UrlStr = NewType('UrlStr', str)
+PdfUrl = NewType("PdfUrl", str)
+UrlStr = NewType("UrlStr", str)
 
 
 @dataclass
@@ -22,7 +22,7 @@ class Bill:
     bill_text_links: List[Dict]
 
     def asDict(self) -> dict:
-        return(self.__dict__)
+        return self.__dict__
 
     def asJson(self) -> str:
-        return(json.dumps(self.asDict(), indent=2))
+        return json.dumps(self.asDict(), indent=2)

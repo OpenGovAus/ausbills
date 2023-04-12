@@ -1,11 +1,11 @@
-# Aus Bills
+# ausbills
 
-🇦🇺 This is a package is for obtaining parliament bills for Australian governments.
+🇦🇺 This is a package is for obtaining parliament bills for Australian parliaments.
 
-## Install via pip3
+## Install via pip
 
 ```
-pip3 install ausbills
+pip install ausbills
 ```
 
 ---
@@ -18,11 +18,11 @@ Most parliaments host their bills online in 2 forms:
 
 1. A table with a small amount of data about each bill
 
-    ![ACT bill list](.github/img/ACT_bill_list.PNG)
+   ![ACT bill list](.github/img/ACT_bill_list.PNG)
 
 2. Individual pages with all the info for a given bill.
 
-    ![ACT bill](.github/img/ACT_bill.PNG)
+   ![ACT bill](.github/img/ACT_bill.PNG)
 
 `ausbills` gives you access to all of this information.
 

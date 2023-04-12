@@ -1,14 +1,14 @@
 # Common
-VALUE = '__value__'
-API_ID = '__id'
-API_TIME = '__time'
-API_HOUSE = 'house'
-TITLE = 'title'
-PASSED = 'passed'
-URL = 'url'
-BILL_TYPE = 'bill_type'
-ID = 'id'
-CHAMBER_PROGRESS = 'chamber_progress'
+VALUE = "__value__"
+API_ID = "__id"
+API_TIME = "__time"
+API_HOUSE = "house"
+TITLE = "title"
+PASSED = "passed"
+URL = "url"
+BILL_TYPE = "bill_type"
+ID = "id"
+CHAMBER_PROGRESS = "chamber_progress"
 CHAMBER = "chamber"
 SHORT_TITLE = "short_title"
 ASSENT_DATE = "assent_date"
@@ -23,12 +23,12 @@ TEXT_LINK = "text_link"
 EM_LINK = "em_link"
 CURRENT_READING = "current_reading"
 READINGS = "readings"
-PROGRESS = 'progress'
-INTRO_DATE = 'intro_date'
+PROGRESS = "progress"
+INTRO_DATE = "intro_date"
 
 # ACT
-INTRO_ASSEMBLY = 'intro_assembly'
-PASSED_ASSEMBLY = 'passed_assembly'
+INTRO_ASSEMBLY = "intro_assembly"
+PASSED_ASSEMBLY = "passed_assembly"
 
 # Federal
 INTRO_HOUSE = "intro_house"
@@ -37,4 +37,4 @@ INTRO_SENATE = "intro_senate"
 PASSED_SENATE = "passed_senate"
 
 # NSW
-CHILDREN = '__children__'
+CHILDREN = "__children__"

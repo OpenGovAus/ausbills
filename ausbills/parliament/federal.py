@@ -21,10 +21,12 @@ from ausbills.log import get_logger
 log = get_logger(__file__)
 
 
-DATE_FMT = "%{0}d/%{0}m/%y".format('')
+DATE_FMT = "%{0}d/%{0}m/%y".format("")
 
-bills_legislation_url = "https://www.aph.gov.au/Parliamentary_Business/Bills_Legislation/Bills_Lists/Details_page" \
-                        "?blsId=legislation%2fbillslst%2fbillslst_c203aa1c-1876-41a8-bc76-1de328bdb726"
+bills_legislation_url = (
+    "https://www.aph.gov.au/Parliamentary_Business/Bills_Legislation/Bills_Lists/Details_page"
+    "?blsId=legislation%2fbillslst%2fbillslst_c203aa1c-1876-41a8-bc76-1de328bdb726"
+)
 
 this_year = datetime.datetime.now().year
 chambers = ["House", "Senate"]
@@ -48,30 +50,41 @@ class AllBills(object):
 
     def _scrape_data(self, table_no):
         markup = requests.get(bills_legislation_url).text
-        soup = BeautifulSoup(markup, 'lxml')
-        tables = soup.find_all('table')
-        trs = tables[table_no].findAll('tr')
+        soup = BeautifulSoup(markup, "lxml")
+        tables = soup.find_all("table")
+        trs = tables[table_no].findAll("tr")
         tr = trs.pop(0)
-        self.headings = self._get_row_data(tr.findAll('td'))
+        self.headings = self._get_row_data(tr.findAll("td"))
         for tr in trs:
             row_dict = dict()
             try:
-                bill_url_string = str(tr.a['href'])
-                row_data = self._get_row_data(tr.findAll('td'))
+                bill_url_string = str(tr.a["href"])
+                row_data = self._get_row_data(tr.findAll("td"))
                 row_dict[CHAMBER] = self.chambers[table_no]
                 for i in range(len(self.headings)):
-                    row_dict[self.headings[i].lower().replace(
-                        " ", "_").replace(".", "")] = row_data[i]
+                    row_dict[
+                        self.headings[i].lower().replace(" ", "_").replace(".", "")
+                    ] = row_data[i]
                 row_dict[URL] = bill_url_string
-                row_dict[ID] = bill_url_string.split('?')[-1].split('=')[-1]
-                row_dict[SHORT_TITLE] = row_dict[SHORT_TITLE].replace('\n', '').replace('    ', '').replace('\r', '').replace('\u00a0', ',').replace(
-                    '$', 'AUD ').replace('ia\u2014', 'ia\'').replace('rans\u2014', 'rans\'').replace('\x80', '').replace('\x99', '').replace('\x94', '')
-                row_dict[SHORT_TITLE] = row_dict[SHORT_TITLE].replace(
-                    '\u2014', '-')
+                row_dict[ID] = bill_url_string.split("?")[-1].split("=")[-1]
+                row_dict[SHORT_TITLE] = (
+                    row_dict[SHORT_TITLE]
+                    .replace("\n", "")
+                    .replace("    ", "")
+                    .replace("\r", "")
+                    .replace("\u00a0", ",")
+                    .replace("$", "AUD ")
+                    .replace("ia\u2014", "ia'")
+                    .replace("rans\u2014", "rans'")
+                    .replace("\x80", "")
+                    .replace("\x99", "")
+                    .replace("\x94", "")
+                )
+                row_dict[SHORT_TITLE] = row_dict[SHORT_TITLE].replace("\u2014", "-")
                 row_dict = self._convert_to_datetime(row_dict)
                 self._bills_data.append(row_dict)
             except Exception as e:
-                print("Bad data", e, ' - ', row_dict[SHORT_TITLE])
+                print("Bad data", e, " - ", row_dict[SHORT_TITLE])
                 raise e
 
     def _get_row_data(self, tds):
@@ -93,38 +106,57 @@ class AllBills(object):
         def to_datetime(indate):
             outdate = None
             if indate is not None:
-                if indate != "" and '/' in indate:
-                    tempdate = indate.split('/')
+                if indate != "" and "/" in indate:
+                    tempdate = indate.split("/")
                     outdate = datetime.date(
-                        bill_year, int(tempdate[1]), int(tempdate[0]))
+                        bill_year, int(tempdate[1]), int(tempdate[0])
+                    )
             return outdate
 
         for i in range(6):
             year = self.this_year - i
             if str(year) in bill_dict[SHORT_TITLE]:
                 bill_year = year
-        house_stages = [INTRO_HOUSE, PASSED_HOUSE,
-                        INTRO_SENATE, PASSED_SENATE, ASSENT_DATE]
-        senate_stages = [INTRO_SENATE, PASSED_SENATE,
-                         INTRO_HOUSE, PASSED_HOUSE, ASSENT_DATE]
+        house_stages = [
+            INTRO_HOUSE,
+            PASSED_HOUSE,
+            INTRO_SENATE,
+            PASSED_SENATE,
+            ASSENT_DATE,
+        ]
+        senate_stages = [
+            INTRO_SENATE,
+            PASSED_SENATE,
+            INTRO_HOUSE,
+            PASSED_HOUSE,
+            ASSENT_DATE,
+        ]
 
         for stage in house_stages:
             bill_dict[stage] = to_datetime(bill_dict[stage])
 
         if bill_dict[CHAMBER] == self.chambers[0]:
             for i in range(len(house_stages) - 1):
-                if bill_dict[house_stages[i]] is not None and bill_dict[house_stages[i + 1]] is not None:
+                if (
+                    bill_dict[house_stages[i]] is not None
+                    and bill_dict[house_stages[i + 1]] is not None
+                ):
                     if bill_dict[house_stages[i]] > bill_dict[house_stages[i + 1]]:
                         d = bill_dict[house_stages[i + 1]]
-                        bill_dict[house_stages[i + 1]
-                                  ] = datetime.date(d.year + 1, d.month, d.day)
+                        bill_dict[house_stages[i + 1]] = datetime.date(
+                            d.year + 1, d.month, d.day
+                        )
         elif bill_dict[CHAMBER] == self.chambers[1]:
             for i in range(len(senate_stages) - 1):
-                if bill_dict[senate_stages[i]] is not None and bill_dict[senate_stages[i + 1]] is not None:
+                if (
+                    bill_dict[senate_stages[i]] is not None
+                    and bill_dict[senate_stages[i + 1]] is not None
+                ):
                     if bill_dict[senate_stages[i]] > bill_dict[senate_stages[i + 1]]:
                         d = bill_dict[senate_stages[i + 1]]
-                        bill_dict[senate_stages[i + 1]
-                                  ] = datetime.date(d.year + 1, d.month, d.day)
+                        bill_dict[senate_stages[i + 1]] = datetime.date(
+                            d.year + 1, d.month, d.day
+                        )
 
         return bill_dict
 
@@ -167,10 +199,13 @@ class BillFed(Bill, BillMetaFed):
 
 def dt_to_str(in_date, template="YYYY-MM-DD"):
     if in_date is not None and not isinstance(in_date, str):
-        out_date = template.replace("YYYY", str(in_date.year))\
-            .replace("MM", f"{in_date.month:02d}").replace("DD", f"{in_date.day:02d}")
+        out_date = (
+            template.replace("YYYY", str(in_date.year))
+            .replace("MM", f"{in_date.month:02d}")
+            .replace("DD", f"{in_date.day:02d}")
+        )
     else:
-        out_date = ''
+        out_date = ""
     return out_date
 
 
@@ -195,10 +230,10 @@ def get_bills_metadata() -> List[BillMetaFed]:
             intro_senate=dt_to_str(bill_dict[INTRO_SENATE]),
             passed_senate=dt_to_str(bill_dict[PASSED_SENATE]),
             assent_date=dt_to_str(bill_dict[ASSENT_DATE]),
-            act_no=bill_dict[ACT_NO]
+            act_no=bill_dict[ACT_NO],
         )
         _bill_meta_list.append(bill_meta)
-    return(_bill_meta_list)
+    return _bill_meta_list
 
 
 class BillFedHelper(BillExtractor):
@@ -221,11 +256,12 @@ class BillFedHelper(BillExtractor):
         return f"<Bill | URL: '{self.url}'>"
 
     def __repr__(self):
-        return ('<{}.{} : {} object at {}>'.format(
+        return "<{}.{} : {} object at {}>".format(
             self.__class__.__module__,
             self.__class__.__name__,
-            self.url.split('=')[-1],
-            hex(id(self))))
+            self.url.split("=")[-1],
+            hex(id(self)),
+        )
 
     @property
     def summary(self):
@@ -249,44 +285,48 @@ class BillFedHelper(BillExtractor):
 
     def get_bill_summary(self):
         try:
-            div = self.bill_soup.find("div", id='main_0_summaryPanel')
+            div = self.bill_soup.find("div", id="main_0_summaryPanel")
         except Exception as e:
             div = None
         if div:
-            for span_tag in div.find_all('span'):
+            for span_tag in div.find_all("span"):
                 span_tag.unwrap()
-            summary = div.p.text.replace('\n', '').replace('    ', '').replace(
-                '\r', '').replace('\u2014\u0080\u0094', ' ').replace('\u00a0', ',').replace('$', 'AUD ').strip()
+            summary = (
+                div.p.text.replace("\n", "")
+                .replace("    ", "")
+                .replace("\r", "")
+                .replace("\u2014\u0080\u0094", " ")
+                .replace("\u00a0", ",")
+                .replace("$", "AUD ")
+                .strip()
+            )
         else:
             summary = ""
         return summary
 
     def get_bill_text_links(self):
-        empyt_link_dict = {DOC: '',
-                           PDF: '',
-                           HTML: ''}
+        empyt_link_dict = {DOC: "", PDF: "", HTML: ""}
         all_texts = []
-        tr_code = 'main_0_textOfBillReadingControl_readingItemRepeater_trFirstReading1_0'
+        tr_code = (
+            "main_0_textOfBillReadingControl_readingItemRepeater_trFirstReading1_0"
+        )
         for code_n in range(3):
             try:
-                tr = self.bill_soup.find(
-                    "tr", id=tr_code + str(code_n))
+                tr = self.bill_soup.find("tr", id=tr_code + str(code_n))
                 if tr is None:
                     continue
                 links = []
-                cells: ResultSet = tr.find_all('td')
-                for a in cells[1].find_all('a') if len(cells) > 1 else list():
-                    links.append(a['href'])
+                cells: ResultSet = tr.find_all("td")
+                for a in cells[1].find_all("a") if len(cells) > 1 else list():
+                    links.append(a["href"])
                 if len(links) >= 3:
-                    all_texts.append({DOC: links[0],
-                                      PDF: links[1],
-                                      HTML: links[2]})
+                    all_texts.append({DOC: links[0], PDF: links[1], HTML: links[2]})
             except Exception as e:
                 log.warning(f"Exception during get_bill_text_links: {e}")
         reading_dict = {
-            'first': empyt_link_dict.copy(),
-            'third': empyt_link_dict.copy(),
-            'aspassed': empyt_link_dict.copy(),
+            "first": empyt_link_dict.copy(),
+            "third": empyt_link_dict.copy(),
+            "aspassed": empyt_link_dict.copy(),
         }
 
         for text in all_texts:
@@ -297,60 +337,70 @@ class BillFedHelper(BillExtractor):
 
     def get_bill_em_links(self) -> List[Dict[str, str]]:
         tr = self.bill_soup.find(
-            "tr", id='main_0_explanatoryMemorandaControl_readingItemRepeater_trFirstReading1_0')
+            "tr",
+            id="main_0_explanatoryMemorandaControl_readingItemRepeater_trFirstReading1_0",
+        )
         if tr is None:
             return []
-        links = list(tr.find_all('td')[1].find_all('a'))
+        links = list(tr.find_all("td")[1].find_all("a"))
         return [
             {
                 API_ID: 0,
-                URL: links[1]['href'],
+                URL: links[1]["href"],
             }
         ]
-        
 
     def get_sponsor(self) -> Maybe[str]:
         try:
-            tr = self.bill_soup.find(
-                "div", id='main_0_billSummary_sponsorPanel')
+            tr = self.bill_soup.find("div", id="main_0_billSummary_sponsorPanel")
             if tr is None:
-                return ''
+                return ""
             # return Just(tr.find('dd').text).value
-            return tr.find_all('dd')[0].text.replace('  ', '').replace('\n', '').replace('\r', '')
+            return (
+                tr.find_all("dd")[0]
+                .text.replace("  ", "")
+                .replace("\n", "")
+                .replace("\r", "")
+            )
         except Exception as e:
             log.warning(e)
-            return ''
+            return ""
 
     def get_portfolio(self) -> Maybe[str]:
         try:
-            tr = self.bill_soup.find(
-                "div", id='main_0_billSummary_portfolioPanel')
+            tr = self.bill_soup.find("div", id="main_0_billSummary_portfolioPanel")
             # return '' if tr is None else Just(tr.find_all('dd')[0].text).value
-            return tr.find_all('dd')[0].text.replace('  ', '').replace('\n', '').replace('\r', '')
+            return (
+                tr.find_all("dd")[0]
+                .text.replace("  ", "")
+                .replace("\n", "")
+                .replace("\r", "")
+            )
         except Exception as e:
             log.warning(e)
-            return ''
+            return ""
 
     @property
     def data(self):
-        self._bill_data[CURRENT_READING] = 'first'
+        self._bill_data[CURRENT_READING] = "first"
         text_type = [DOC, PDF, HTML]
         self._bill_data[SUMMARY] = self.summary
         self._bill_data[SPONSOR] = self.sponsor
         self._bill_data[PORTFOLIO] = self.portfolio
         self._bill_data[READINGS] = self.bill_text_links
         for TEXT in text_type:
-            for reading in ['first', 'third', 'aspassed']:
-                if self.bill_text_links[reading][TEXT] != '':
-                    self._bill_data[TEXT_LINK + '_' +
-                                    TEXT] = self.bill_text_links[reading][TEXT]
+            for reading in ["first", "third", "aspassed"]:
+                if self.bill_text_links[reading][TEXT] != "":
+                    self._bill_data[TEXT_LINK + "_" + TEXT] = self.bill_text_links[
+                        reading
+                    ][TEXT]
                     self._bill_data[CURRENT_READING] = reading
             try:
-                self._bill_data[EM_LINK + '_' +
-                                TEXT] = self.explanatory_memoranda_links[TEXT]
+                self._bill_data[
+                    EM_LINK + "_" + TEXT
+                ] = self.explanatory_memoranda_links[TEXT]
             except Exception:
-                self._bill_data[EM_LINK + '_' +
-                                TEXT] = ''
+                self._bill_data[EM_LINK + "_" + TEXT] = ""
         return self._bill_data
 
     def to_json(self) -> str:
@@ -359,47 +409,65 @@ class BillFedHelper(BillExtractor):
     @property
     def chamber_progress(self):
         return self.get_chamber_progress()
-    
+
     def get_chamber_progress(self):
         if len(self.passed_senate) > 0 and len(self.passed_house) > 0:
             _prog_dict = {
                 BillProgress.FIRST.value: True,
                 BillProgress.SECOND.value: True,
-                BillProgress.ASSENTED.value: True
+                BillProgress.ASSENTED.value: True,
             }
         else:
             _prog_dict = None
         _house_timestamp = 0
         _senate_timestamp = 0
         if len(self.intro_house) > 0:
-            _house_timestamp = self._get_timestamp(self.intro_house, '%Y-%m-%d')
+            _house_timestamp = self._get_timestamp(self.intro_house, "%Y-%m-%d")
         if len(self.intro_senate) > 0:
-            _senate_timestamp = self._get_timestamp(self.intro_senate, '%Y-%m-%d')
-        
+            _senate_timestamp = self._get_timestamp(self.intro_senate, "%Y-%m-%d")
+
         if _house_timestamp > _senate_timestamp:
-            _chamber = 'House of Representatives'
+            _chamber = "House of Representatives"
             if _prog_dict is None:
-                _prog_dict = {BillProgress.FIRST.value: True, BillProgress.SECOND.value: True, BillProgress.ASSENTED.value: False}
+                _prog_dict = {
+                    BillProgress.FIRST.value: True,
+                    BillProgress.SECOND.value: True,
+                    BillProgress.ASSENTED.value: False,
+                }
                 if _senate_timestamp == 0:
                     _prog_dict[BillProgress.SECOND.value] = False
         else:
-            _chamber = 'Senate'
+            _chamber = "Senate"
             if _prog_dict is None:
-                _prog_dict = {BillProgress.FIRST.value: True, BillProgress.SECOND.value: True, BillProgress.ASSENTED.value: False}
+                _prog_dict = {
+                    BillProgress.FIRST.value: True,
+                    BillProgress.SECOND.value: True,
+                    BillProgress.ASSENTED.value: False,
+                }
                 if _house_timestamp == 0:
                     _prog_dict[BillProgress.FIRST.value] = False
 
         try:
-            stage_text = self.bill_soup.find_all('th', string=_chamber)[0].parent.parent.parent.find('tbody').find_all('tr')[-1].text.strip()
-            if 'First' in stage_text:
+            stage_text = (
+                self.bill_soup.find_all("th", string=_chamber)[0]
+                .parent.parent.parent.find("tbody")
+                .find_all("tr")[-1]
+                .text.strip()
+            )
+            if "First" in stage_text:
                 _reading = ChamberProgress.FIRST_READING.value
-            elif 'Second' in stage_text or 'Referred' in stage_text or 'Restored' in stage_text:
+            elif (
+                "Second" in stage_text
+                or "Referred" in stage_text
+                or "Restored" in stage_text
+            ):
                 _reading = ChamberProgress.SECOND_READING.value
-            elif 'Third' in stage_text:
+            elif "Third" in stage_text:
                 _reading = ChamberProgress.THIRD_READING.value
             else:
                 log.warning(
-                    'Could not identify reading stage, using second; \n' + stage_text)
+                    "Could not identify reading stage, using second; \n" + stage_text
+                )
                 _reading = ChamberProgress.SECOND_READING.value
         except IndexError:
             _reading = ChamberProgress.FIRST_READING.value
@@ -417,18 +485,21 @@ def get_bill(bill_meta: BillMetaFed) -> BillFed:
         BillFed: Including the federal specific information
         Note: use BillFed.asDict() and BillFed.asJson() to get the data
     """
+
     def stupid_timestamp_thing(input_date):
         try:
-            return int(datetime.datetime.strptime(input_date, '%Y-%m-%d').timestamp())
+            return int(datetime.datetime.strptime(input_date, "%Y-%m-%d").timestamp())
         except ValueError:
-            return ''
+            return ""
+
     fed_helper: BillFedHelper = BillFedHelper(bill_meta)
     progdata = fed_helper.chamber_progress
     bill_fed = BillFed(
         title=bill_meta.title,
         link=bill_meta.link,
         sponsor=fed_helper.sponsor
-                if fed_helper.sponsor != "" else fed_helper.portfolio,
+        if fed_helper.sponsor != ""
+        else fed_helper.portfolio,
         text_link=fed_helper.data[CURRENT_READING],
         # From bill_meta
         parliament=str(bill_meta.parliament),
@@ -448,4 +519,4 @@ def get_bill(bill_meta: BillMetaFed) -> BillFed:
         progress=progdata[1],
         chamber_progress=progdata[0],
     )
-    return(bill_fed)
+    return bill_fed
